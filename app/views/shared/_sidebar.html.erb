@@ -1,0 +1,60 @@
+<aside
+  data-controller="sidebar"
+  data-sidebar-collapsed-class="w-16"
+  data-sidebar-expanded-class="w-60"
+  class="flex h-screen flex-col border-r border-border bg-card transition-all duration-300 w-60"
+>
+  <%# Logo section %>
+  <div class="flex items-center gap-2 border-b border-border px-4 py-4">
+    <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary">
+      <%= icon("activity", classes: "h-4 w-4 text-primary-foreground") %>
+    </div>
+    <div class="overflow-hidden" data-sidebar-target="label">
+      <h1 class="text-sm font-semibold text-foreground truncate">LIDR RAG Estimator</h1>
+      <p class="text-[10px] text-muted-foreground font-mono">v1.0.0</p>
+    </div>
+  </div>
+
+  <%# Navigation %>
+  <nav class="flex-1 space-y-1 px-2 py-3">
+    <%
+      nav_items = [
+        { path: "/dashboard", icon: "layout_dashboard", label: "Dashboard" },
+        { path: "/ingest", icon: "upload", label: "Ingesta" },
+        { path: "/estimate", icon: "brain", label: "Estimación" },
+        { path: "/search", icon: "search", label: "Búsqueda" },
+        { path: "/documents", icon: "file_text", label: "Estimaciones" },
+      ]
+    %>
+
+    <% nav_items.each do |item| %>
+      <%
+        is_active = current_page?(item[:path]) rescue false
+        link_classes = if is_active
+          "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors bg-primary/10 text-primary glow-sm"
+        else
+          "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors text-muted-foreground hover:bg-surface-hover hover:text-foreground"
+        end
+      %>
+      <%= link_to item[:path], class: link_classes do %>
+        <%= icon(item[:icon], classes: "h-4 w-4 shrink-0") %>
+        <span data-sidebar-target="label"><%= item[:label] %></span>
+      <% end %>
+    <% end %>
+  </nav>
+
+  <%# Collapse toggle %>
+  <div class="border-t border-border p-2">
+    <button
+      data-action="sidebar#toggle"
+      class="flex w-full items-center justify-center rounded-lg p-2 text-muted-foreground hover:bg-surface-hover hover:text-foreground transition-colors"
+    >
+      <span data-sidebar-target="collapseIcon">
+        <%= icon("chevron_left", classes: "h-4 w-4") %>
+      </span>
+      <span data-sidebar-target="expandIcon" class="hidden">
+        <%= icon("chevron_right", classes: "h-4 w-4") %>
+      </span>
+    </button>
+  </div>
+</aside>

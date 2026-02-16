@@ -1,0 +1,33 @@
+# syntax=docker/dockerfile:1
+
+# Development Dockerfile — includes all gems, no asset precompile, no multi-stage.
+# Usage: docker-compose -f docker-compose.dev.yml up --build
+
+ARG RUBY_VERSION=3.4.4
+FROM docker.io/library/ruby:$RUBY_VERSION-slim
+
+# Rails app lives here
+WORKDIR /rails
+
+# Install packages needed for development (build tools + runtime libs)
+RUN apt-get update -qq && \
+    apt-get install --no-install-recommends -y \
+      build-essential git libyaml-dev libpq-dev pkg-config curl \
+      libjemalloc2 libvips libpq5 && \
+    rm -rf /var/lib/apt/lists /var/cache/apt/archives
+
+# Install all gems (no BUNDLE_WITHOUT, no BUNDLE_DEPLOYMENT)
+ENV BUNDLE_PATH="/usr/local/bundle"
+
+COPY Gemfile Gemfile.lock ./
+RUN bundle install
+
+# Copy application code (bind mount will override in dev)
+COPY . .
+
+# Entrypoint prepares the database
+ENTRYPOINT ["/rails/bin/docker-entrypoint"]
+
+# Start foreman (Rails server + Tailwind watcher)
+EXPOSE 3000
+CMD ["bin/dev"]

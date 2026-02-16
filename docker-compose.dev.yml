@@ -1,0 +1,42 @@
+services:
+  db:
+    image: postgres:16-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: rag_estimation_platform_development
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/rails
+      - bundle_cache:/usr/local/bundle
+      - rails_cache:/rails/tmp/cache
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/rag_estimation_platform_development
+      RAG_SERVICE_BASE_URL: http://host.docker.internal:8000
+      RAILS_ENV: development
+      BINDING: 0.0.0.0
+    depends_on:
+      db:
+        condition: service_healthy
+    stdin_open: true
+    tty: true
+
+volumes:
+  pgdata:
+  bundle_cache:
+  rails_cache:

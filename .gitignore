@@ -7,8 +7,9 @@
 # Ignore bundler config.
 /.bundle
 
-# Ignore all environment files.
+# Ignore all environment files (keep .sample files tracked).
 /.env*
+!/.env.*.sample
 
 # Ignore all logfiles and tempfiles.
 /log/*
@@ -32,3 +33,6 @@
 
 # Ignore master key for decrypting credentials and more.
 /config/master.key
+
+/app/assets/builds/*
+!/app/assets/builds/.keep

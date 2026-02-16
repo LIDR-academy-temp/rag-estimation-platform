@@ -1,0 +1,19 @@
+<%# locals: (status:) %>
+<%
+  badge_styles = case status.to_s
+  when "healthy", "completed"
+    { bg: "bg-success/10", text: "text-success", dot: "bg-success" }
+  when "processing"
+    { bg: "bg-warning/10", text: "text-warning", dot: "bg-warning animate-pulse-glow" }
+  when "failed"
+    { bg: "bg-destructive/10", text: "text-destructive", dot: "bg-destructive" }
+  when "pending"
+    { bg: "bg-info/10", text: "text-info", dot: "bg-info" }
+  else
+    { bg: "bg-muted", text: "text-muted-foreground", dot: "bg-muted-foreground" }
+  end
+%>
+<span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium <%= badge_styles[:bg] %> <%= badge_styles[:text] %>">
+  <span class="h-1.5 w-1.5 rounded-full <%= badge_styles[:dot] %>"></span>
+  <%= status.to_s.capitalize %>
+</span>

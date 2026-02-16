@@ -1,0 +1,27 @@
+<%# locals: (title:, value:, subtitle: nil, icon_name: nil, variant: "default") %>
+<%
+  variant_styles = case variant
+  when "primary"
+    { border: "border-primary/20", icon_bg: "bg-primary/10", icon_text: "text-primary" }
+  when "success"
+    { border: "border-success/20", icon_bg: "bg-success/10", icon_text: "text-success" }
+  when "warning"
+    { border: "border-warning/20", icon_bg: "bg-warning/10", icon_text: "text-warning" }
+  else
+    { border: "border-border", icon_bg: "bg-muted", icon_text: "text-muted-foreground" }
+  end
+%>
+<div class="rounded-lg border <%= variant_styles[:border] %> bg-card p-4">
+  <div class="flex items-center justify-between mb-2">
+    <span class="text-xs font-medium text-muted-foreground uppercase tracking-wider"><%= title %></span>
+    <% if icon_name.present? %>
+      <div class="flex h-8 w-8 items-center justify-center rounded-md <%= variant_styles[:icon_bg] %>">
+        <%= icon(icon_name, classes: "h-4 w-4 #{variant_styles[:icon_text]}") %>
+      </div>
+    <% end %>
+  </div>
+  <div class="text-2xl font-bold font-mono text-foreground"><%= value %></div>
+  <% if subtitle.present? %>
+    <p class="mt-1 text-xs text-muted-foreground"><%= subtitle %></p>
+  <% end %>
+</div>
