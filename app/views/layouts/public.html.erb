@@ -23,6 +23,18 @@
   </head>
 
   <body>
+    <% if notice.present? %>
+      <div class="fixed top-4 left-1/2 z-50 -translate-x-1/2 rounded-lg border border-success/20 bg-success/10 px-4 py-3 text-sm text-success">
+        <%= notice %>
+      </div>
+    <% end %>
+
+    <% if alert.present? %>
+      <div class="fixed top-4 left-1/2 z-50 -translate-x-1/2 rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+        <%= alert %>
+      </div>
+    <% end %>
+
     <%= yield %>
   </body>
 </html>

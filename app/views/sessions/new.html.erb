@@ -1,0 +1,90 @@
+<div class="flex min-h-screen items-center justify-center bg-background px-4">
+  <%# Glow effect %>
+  <div class="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+    <div class="h-[400px] w-[600px] rounded-full bg-primary/[0.08] blur-[100px]"></div>
+  </div>
+
+  <div class="relative z-10 w-full max-w-md space-y-6">
+    <%# Back link %>
+    <a href="/" class="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+      <%= icon("arrow_left", classes: "h-4 w-4") %>
+      Volver al inicio
+    </a>
+
+    <%# Logo %>
+    <div class="flex items-center gap-3">
+      <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary">
+        <%= icon("activity", classes: "h-5 w-5 text-primary-foreground") %>
+      </div>
+      <div>
+        <h1 class="text-lg font-semibold text-foreground">LIDR RAG Estimator</h1>
+        <p class="text-xs text-muted-foreground font-mono">v1.0.0</p>
+      </div>
+    </div>
+
+    <%# Card %>
+    <div class="rounded-xl border border-border bg-card p-6 space-y-6">
+      <div>
+        <h2 class="text-xl font-semibold text-foreground">Iniciar sesión</h2>
+        <p class="mt-1 text-sm text-muted-foreground">Accede a tu panel de estimaciones</p>
+      </div>
+
+      <%= form_with url: login_path, class: "space-y-4" do |f| %>
+        <%# Email %>
+        <div class="space-y-2">
+          <label for="email" class="text-sm font-medium text-foreground">Email</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            value="<%= params[:email] %>"
+            placeholder="tu@email.com"
+            autocomplete="email"
+            required
+            class="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
+          />
+        </div>
+
+        <%# Password %>
+        <div class="space-y-2">
+          <label for="password" class="text-sm font-medium text-foreground">Contraseña</label>
+          <div class="relative" data-controller="password-toggle">
+            <input
+              type="password"
+              id="password"
+              name="password"
+              placeholder="••••••••"
+              autocomplete="current-password"
+              required
+              data-password-toggle-target="input"
+              class="h-10 w-full rounded-md border border-input bg-background px-3 py-2 pr-10 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
+            />
+            <button
+              type="button"
+              data-action="password-toggle#toggle"
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <span data-password-toggle-target="showIcon">
+                <%= icon("eye", classes: "h-4 w-4") %>
+              </span>
+              <span data-password-toggle-target="hideIcon" class="hidden">
+                <%= icon("eye_off", classes: "h-4 w-4") %>
+              </span>
+            </button>
+          </div>
+        </div>
+
+        <%# Submit %>
+        <button type="submit" class="h-10 w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors">
+          Entrar
+        </button>
+      <% end %>
+
+      <%# Toggle link %>
+      <p class="text-center text-sm text-muted-foreground">
+        ¿No tienes cuenta?
+        <%= link_to "Regístrate", register_path, class: "text-primary hover:underline" %>
+      </p>
+    </div>
+  </div>
+</div>

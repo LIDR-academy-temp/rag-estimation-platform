@@ -19,17 +19,17 @@
   <nav class="flex-1 space-y-1 px-2 py-3">
     <%
       nav_items = [
-        { path: "/dashboard", icon: "layout_dashboard", label: "Dashboard" },
-        { path: "/ingest", icon: "upload", label: "Ingesta" },
-        { path: "/estimate", icon: "brain", label: "Estimación" },
-        { path: "/search", icon: "search", label: "Búsqueda" },
-        { path: "/documents", icon: "file_text", label: "Estimaciones" },
+        { path: dashboard_path, icon: "layout_dashboard", label: "Dashboard" },
+        { path: ingest_path, icon: "upload", label: "Ingesta" },
+        { path: estimate_path, icon: "brain", label: "Estimación" },
+        { path: search_path, icon: "search", label: "Búsqueda" },
+        { path: documents_path, icon: "file_text", label: "Estimaciones" },
       ]
     %>
 
     <% nav_items.each do |item| %>
       <%
-        is_active = current_page?(item[:path]) rescue false
+        is_active = current_page?(item[:path]) || (item[:path] == documents_path && controller_name == "documents")
         link_classes = if is_active
           "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors bg-primary/10 text-primary glow-sm"
         else

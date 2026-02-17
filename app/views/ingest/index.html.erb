@@ -1,0 +1,52 @@
+<%= render "shared/page_header", title: "Ingesta de presupuestos", description: "Sube presupuestos JSON para indexarlos en el sistema RAG" %>
+
+<div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+  <%# Upload area %>
+  <%= form_with url: ingest_path, method: :post, local: true, class: "space-y-4" do %>
+    <div class="rounded-xl border-2 border-dashed border-border bg-card p-8 text-center hover:border-primary/40 transition-colors cursor-pointer">
+      <%= icon("upload", classes: "mx-auto h-10 w-10 text-muted-foreground mb-3") %>
+      <p class="text-sm font-medium text-card-foreground">Arrastra un archivo JSON aquí</p>
+      <p class="text-xs text-muted-foreground mt-1">o haz clic para seleccionar &middot; Máx 5MB</p>
+    </div>
+
+    <div class="text-xs text-muted-foreground flex items-center gap-1 justify-center">
+      <%= icon("file_json", classes: "h-3 w-3") %> O pega el JSON directamente:
+    </div>
+
+    <textarea
+      name="raw_json"
+      placeholder='{"quote":{"project":{"title":"Mi Proyecto","subtitle":"Descripción del proyecto"},"scope_blocks":[...],"items":[...]}}'
+      class="flex min-h-[200px] w-full rounded-md border border-border bg-surface px-3 py-2 font-mono text-xs placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary resize-none"
+    ></textarea>
+
+    <button type="submit" class="inline-flex items-center justify-center w-full rounded-md bg-primary text-primary-foreground text-sm font-medium h-10 px-4 hover:bg-primary/90 transition-colors">
+      <%= icon("upload", classes: "mr-2 h-4 w-4") %>
+      Ingestar presupuesto
+    </button>
+  <% end %>
+
+  <%# History %>
+  <div class="rounded-xl border border-border bg-card">
+    <div class="border-b border-border px-5 py-3">
+      <h3 class="text-sm font-semibold text-card-foreground">Historial de ingestas</h3>
+    </div>
+    <div class="divide-y divide-border">
+      <% @documents.each do |doc| %>
+        <div class="flex items-center justify-between px-5 py-3 hover:bg-surface transition-colors">
+          <div class="min-w-0 flex-1">
+            <p class="text-sm text-card-foreground truncate"><%= doc.title %></p>
+            <div class="flex items-center gap-2 mt-0.5">
+              <span class="text-[11px] font-mono text-muted-foreground"><%= doc.created_at.strftime("%Y-%m-%d") %></span>
+              <% if doc.status == "completed" %>
+                <span class="text-[11px] text-muted-foreground">
+                  <%= doc.chunks_count %> chunks
+                </span>
+              <% end %>
+            </div>
+          </div>
+          <%= render "shared/status_badge", status: doc.status %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

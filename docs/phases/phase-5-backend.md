@@ -1,5 +1,7 @@
 # Phase 5 — Backend Logic & Controllers
 
+**Status: ⬚ Pending**
+
 **Objective:** Wire all static views to real database queries, implement CRUD, filtering, pagination, and prepare the controller actions for RAG integration.
 
 **Dependencies:** Phase 3 (models), Phase 4 (views)

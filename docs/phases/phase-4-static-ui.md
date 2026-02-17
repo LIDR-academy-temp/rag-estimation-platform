@@ -1,5 +1,7 @@
 # Phase 4 — Static UI Scaffolding (ERB + Tailwind)
 
+**Status: ✅ Completed**
+
 **Objective:** Build all 8 screens as ERB views with Tailwind CSS to achieve visual parity with the React reference. Data comes from seeds — no backend logic yet.
 
 **Dependencies:** Phase 1 (Tailwind + layouts), Phase 3 (seed data)

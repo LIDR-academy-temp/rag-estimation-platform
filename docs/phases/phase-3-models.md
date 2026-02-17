@@ -1,5 +1,7 @@
 # Phase 3 — Data Modeling & Migrations
 
+**Status: ✅ Completed**
+
 **Objective:** Create all ActiveRecord models and database tables representing the domain entities visible across the UI and the RAG service responses.
 
 **Dependencies:** Phase 2 (User model exists)

@@ -4,7 +4,7 @@
 
 A software estimation platform powered by AI. The Rails 8 app (`rag-estimation-platform`) is the core product — it handles UI, data persistence, and orchestration. It delegates all AI/RAG work (ingestion, semantic search, estimation) to an existing Python microservice (`rag-estimation-service`) via HTTP. The visual design comes from a React reference app (`project-blueprint-studio`) which has 8 screens with hardcoded data that we replicate in ERB + Tailwind + Hotwire.
 
-**Current state:** Clean Rails 8.0.2 scaffold. Turbo, Stimulus, and Importmaps are configured. No models, controllers, migrations, routes, or Tailwind CSS yet. Database is SQLite3 (must be switched to PostgreSQL). Kamal is pre-configured for deployment.
+**Current state:** Phases 1–4 completed. PostgreSQL, Tailwind dark theme, authentication, 6 models with migrations, and all 8 static UI screens are built. Currently entering Phase 5 (Backend Logic & Controllers).
 
 ---
 
@@ -27,16 +27,16 @@ Phases 4 & 5 can partially overlap (build a view then wire it up immediately), b
 
 ## Phases
 
-| Phase | Title | Dependencies | Detail Doc |
-|-------|-------|-------------|------------|
-| 1 | Project Setup & Configuration | None | [phase-1-setup.md](phases/phase-1-setup.md) |
-| 2 | Authentication | Phase 1 | [phase-2-auth.md](phases/phase-2-auth.md) |
-| 3 | Data Modeling & Migrations | Phase 2 | [phase-3-models.md](phases/phase-3-models.md) |
-| 4 | Static UI Scaffolding | Phases 1, 3 | [phase-4-static-ui.md](phases/phase-4-static-ui.md) |
-| 5 | Backend Logic & Controllers | Phases 3, 4 | [phase-5-backend.md](phases/phase-5-backend.md) |
-| 6 | RAG Service Integration | Phase 5 | [phase-6-rag-integration.md](phases/phase-6-rag-integration.md) |
-| 7 | Real-Time & Interactive Features | Phases 4, 5, 6 | [phase-7-interactivity.md](phases/phase-7-interactivity.md) |
-| 8 | Polish, Testing & Validation | Phases 1–7 | [phase-8-polish-testing.md](phases/phase-8-polish-testing.md) |
+| Phase | Title | Status | Dependencies | Detail Doc |
+|-------|-------|--------|-------------|------------|
+| 1 | Project Setup & Configuration | ✅ Completed | None | [phase-1-setup.md](phases/phase-1-setup.md) |
+| 2 | Authentication | ✅ Completed | Phase 1 | [phase-2-auth.md](phases/phase-2-auth.md) |
+| 3 | Data Modeling & Migrations | ✅ Completed | Phase 2 | [phase-3-models.md](phases/phase-3-models.md) |
+| 4 | Static UI Scaffolding | ✅ Completed | Phases 1, 3 | [phase-4-static-ui.md](phases/phase-4-static-ui.md) |
+| 5 | Backend Logic & Controllers | ⬚ Pending | Phases 3, 4 | [phase-5-backend.md](phases/phase-5-backend.md) |
+| 6 | RAG Service Integration | ⬚ Pending | Phase 5 | [phase-6-rag-integration.md](phases/phase-6-rag-integration.md) |
+| 7 | Real-Time & Interactive Features | ⬚ Pending | Phases 4, 5, 6 | [phase-7-interactivity.md](phases/phase-7-interactivity.md) |
+| 8 | Polish, Testing & Validation | ⬚ Pending | Phases 1–7 | [phase-8-polish-testing.md](phases/phase-8-polish-testing.md) |
 
 ---
 

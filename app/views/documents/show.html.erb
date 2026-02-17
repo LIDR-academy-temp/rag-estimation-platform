@@ -1,0 +1,226 @@
+<% content_for :page_actions do %>
+  <%= link_to documents_path, class: "inline-flex items-center justify-center rounded-md border border-border bg-card text-sm font-medium h-9 px-3 hover:bg-surface-hover transition-colors" do %>
+    <%= icon("arrow_left", classes: "mr-2 h-4 w-4") %> Volver
+  <% end %>
+  <button class="inline-flex items-center justify-center rounded-md border border-border bg-card text-sm font-medium h-9 px-3 hover:bg-surface-hover transition-colors">
+    <%= icon("file_text", classes: "mr-2 h-4 w-4") %> Exportar PDF
+  </button>
+<% end %>
+
+<%= render "shared/page_header", title: @document.title, description: @document.description %>
+
+<% if @estimation %>
+  <div class="space-y-6" data-controller="estimate-type collapsible">
+    <%# Meta row %>
+    <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <% total_tasks = @estimation.status == "completed" ? @estimation.tasks.count : 0 %>
+      <% [
+        { icon_name: "calendar", label: "Fecha", value: @estimation.created_at.strftime("%Y-%m-%d") },
+        { icon_name: "layers", label: "Bloques", value: @estimation.functional_blocks.size.to_s },
+        { icon_name: "clock", label: "Tareas", value: total_tasks.to_s },
+        { icon_name: "euro", label: "Tarifa base", value: "#{@estimation.global_rate.to_i}€/h" }
+      ].each do |m| %>
+        <div class="rounded-xl border border-border bg-card p-4">
+          <div class="flex items-center gap-2 text-muted-foreground mb-1">
+            <%= icon(m[:icon_name], classes: "h-3.5 w-3.5") %>
+            <span class="text-xs"><%= m[:label] %></span>
+          </div>
+          <p class="text-sm font-semibold font-mono text-card-foreground"><%= m[:value] %></p>
+        </div>
+      <% end %>
+    </div>
+
+    <%# Status + Confidence + Techs %>
+    <div class="rounded-xl border border-border bg-card p-5">
+      <div class="flex flex-wrap items-center gap-4">
+        <div class="flex items-center gap-2">
+          <span class="text-xs text-muted-foreground">Estado:</span>
+          <%= render "shared/status_badge", status: @estimation.status %>
+        </div>
+        <% if @estimation.confidence_score && @estimation.confidence_score > 0 %>
+          <div class="flex items-center gap-2">
+            <%= icon("sparkles", classes: "h-3.5 w-3.5 text-primary") %>
+            <span class="text-xs text-muted-foreground">Confianza:</span>
+            <span class="text-xs font-semibold font-mono <%= confidence_color(@estimation.confidence_score) %>">
+              <%= (@estimation.confidence_score * 100).round(0) %>% (<%= @estimation.confidence_level %>)
+            </span>
+          </div>
+        <% end %>
+        <div class="flex items-center gap-2 ml-auto">
+          <% techs = @estimation.technologies.is_a?(Array) ? @estimation.technologies : [] %>
+          <% techs.each do |t| %>
+            <span class="rounded bg-secondary px-2 py-0.5 text-xs font-mono text-secondary-foreground"><%= t %></span>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <% if @estimation.status == "completed" && @estimation.functional_blocks.any? %>
+      <%
+        blocks = @estimation.functional_blocks
+        # Pre-compute totals for each estimate type
+        estimate_types = {
+          optimistic: { label: "Optimista", icon: "trending_down", cls: "text-success" },
+          expected: { label: "Esperado", icon: "minus", cls: "text-info" },
+          pessimistic: { label: "Pesimista", icon: "trending_up", cls: "text-warning" }
+        }
+
+        totals = {}
+        estimate_types.each_key do |type|
+          hours = blocks.sum { |b| b.send("total_hours_#{type}") }
+          cost = blocks.sum { |b| b.total_cost(type) }
+          totals[type] = { hours: hours, cost: cost }
+        end
+
+        total_tasks_count = blocks.sum { |b| b.tasks.size }
+        max_hours = blocks.flat_map { |b| b.tasks.map(&:hours_pessimistic) }.max || 1
+      %>
+
+      <%# Three-point estimate selector %>
+      <div class="grid grid-cols-3 gap-3">
+        <% estimate_types.each do |type, meta| %>
+          <button
+            class="rounded-xl border p-4 text-center transition-all cursor-pointer border-border bg-card hover:border-primary/40"
+            data-action="estimate-type#select"
+            data-estimate-type-type-param="<%= type %>"
+            data-estimate-type-target="selector"
+          >
+            <div class="mx-auto h-4 w-4 mb-2 <%= meta[:cls] %>">
+              <%= icon(meta[:icon], classes: "h-4 w-4") %>
+            </div>
+            <p class="text-xs text-muted-foreground"><%= meta[:label] %></p>
+            <p class="text-lg font-semibold font-mono text-card-foreground mt-1">
+              <%= totals[type][:hours].to_i %>h
+            </p>
+            <p class="text-xs font-mono text-muted-foreground mt-0.5">
+              <%= number_with_delimiter(totals[type][:cost].to_i) %>€
+            </p>
+          </button>
+        <% end %>
+      </div>
+
+      <%# Summary stats %>
+      <div class="grid grid-cols-4 gap-3">
+        <% estimate_types.each_key do |type| %>
+          <div class="rounded-xl border border-border bg-card p-4 text-center" data-estimate-type-target="stats" data-estimate-type="<%= type %>" style="<%= type != :expected ? 'display:none' : '' %>">
+            <p class="text-xs text-muted-foreground">Total horas</p>
+            <p class="text-2xl font-semibold font-mono text-card-foreground mt-1"><%= totals[type][:hours].to_i %>h</p>
+            <p class="text-xs text-muted-foreground"><%= (totals[type][:hours] / 8.0).round(1) %> días</p>
+          </div>
+        <% end %>
+        <div class="rounded-xl border border-border bg-card p-4 text-center">
+          <p class="text-xs text-muted-foreground">Bloques</p>
+          <p class="text-2xl font-semibold font-mono text-card-foreground mt-1"><%= blocks.size %></p>
+          <p class="text-xs text-muted-foreground">funcionales</p>
+        </div>
+        <div class="rounded-xl border border-border bg-card p-4 text-center">
+          <p class="text-xs text-muted-foreground">Tareas</p>
+          <p class="text-2xl font-semibold font-mono text-card-foreground mt-1"><%= total_tasks_count %></p>
+          <p class="text-xs text-muted-foreground">estimadas</p>
+        </div>
+        <% estimate_types.each_key do |type| %>
+          <div class="rounded-xl border border-border bg-card p-4 text-center" data-estimate-type-target="stats" data-estimate-type="<%= type %>" style="<%= type != :expected ? 'display:none' : '' %>">
+            <p class="text-xs text-muted-foreground">Coste total</p>
+            <p class="text-2xl font-semibold font-mono text-card-foreground mt-1"><%= number_with_delimiter(totals[type][:cost].to_i) %>€</p>
+            <p class="text-xs text-muted-foreground"><%= estimate_types[type][:label] %></p>
+          </div>
+        <% end %>
+      </div>
+
+      <%# Block breakdown %>
+      <div class="space-y-3">
+        <% blocks.each do |block| %>
+          <div class="rounded-xl border border-border bg-card overflow-hidden" data-collapsible-target="block">
+            <div class="flex items-center gap-2 px-5 py-3.5 bg-surface/50">
+              <button class="text-muted-foreground hover:text-card-foreground transition-colors" data-action="collapsible#toggle">
+                <span data-collapsible-target="iconExpanded"><%= icon("chevron_down", classes: "h-4 w-4") %></span>
+                <span data-collapsible-target="iconCollapsed" class="hidden"><%= icon("chevron_right", classes: "h-4 w-4") %></span>
+              </button>
+              <h3 class="flex-1 text-sm font-semibold text-card-foreground"><%= block.name %></h3>
+              <span class="text-xs text-muted-foreground font-mono"><%= block.tasks.size %> tareas</span>
+
+              <% estimate_types.each_key do |type| %>
+                <span class="text-xs font-mono text-muted-foreground" data-estimate-type-target="value" data-estimate-type="<%= type %>" style="<%= type != :expected ? 'display:none' : '' %>">
+                  <%= number_with_delimiter(block.total_cost(type).to_i) %>€
+                </span>
+                <span class="text-sm font-mono font-semibold text-primary" data-estimate-type-target="value" data-estimate-type="<%= type %>" style="<%= type != :expected ? 'display:none' : '' %>">
+                  <%= block.send("total_hours_#{type}").to_i %>h
+                </span>
+              <% end %>
+            </div>
+
+            <div class="px-5 py-3 space-y-1.5" data-collapsible-target="body">
+              <% block.tasks.each do |task| %>
+                <div class="flex items-center justify-between rounded-lg bg-surface px-4 py-2.5">
+                  <span class="text-sm text-card-foreground flex-1"><%= task.name %></span>
+                  <div class="flex items-center gap-3">
+                    <span class="text-xs font-mono text-muted-foreground"><%= task.effective_rate.to_i %>€/h</span>
+                    <% estimate_types.each_key do |type| %>
+                      <% task_hours = task.send("hours_#{type}") %>
+                      <span class="flex items-center gap-3" data-estimate-type-target="value" data-estimate-type="<%= type %>" style="<%= type != :expected ? 'display:none' : '' %>">
+                        <span class="w-20">
+                          <div class="h-1.5 rounded-full bg-muted overflow-hidden">
+                            <div class="h-full rounded-full bg-primary" style="width: <%= (task_hours.to_f / max_hours * 100).round(1) %>%"></div>
+                          </div>
+                        </span>
+                        <span class="text-sm font-mono font-medium text-card-foreground min-w-[3rem] text-right">
+                          <%= task_hours.to_i %>h
+                        </span>
+                        <span class="text-xs font-mono text-muted-foreground min-w-[4.5rem] text-right">
+                          <%= number_with_delimiter(task.cost(type).to_i) %>€
+                        </span>
+                      </span>
+                    <% end %>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+
+    <%# References %>
+    <% if @estimation.references.any? %>
+      <div class="rounded-xl border border-border bg-card p-5">
+        <h3 class="text-sm font-semibold text-card-foreground mb-4">Referencias históricas utilizadas</h3>
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <% @estimation.references.by_similarity.each do |ref| %>
+            <div class="rounded-lg border border-border bg-surface p-4">
+              <p class="text-sm font-medium text-card-foreground"><%= ref.title %></p>
+              <div class="mt-2 flex items-center gap-2">
+                <span class="text-xs font-mono text-primary"><%= (ref.similarity_score * 100).round(0) %>% similar</span>
+                <span class="text-xs text-muted-foreground">&middot;</span>
+                <span class="text-xs font-mono text-muted-foreground"><%= number_with_delimiter(ref.cost.to_i) %>€</span>
+              </div>
+              <div class="mt-2 flex flex-wrap gap-1">
+                <% ref_techs = ref.technologies.is_a?(Array) ? ref.technologies : [] %>
+                <% ref_techs.each do |t| %>
+                  <span class="rounded bg-secondary px-1.5 py-0.5 text-[10px] font-mono text-secondary-foreground"><%= t %></span>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
+    <%# Empty state for non-completed %>
+    <% if @estimation.status != "completed" %>
+      <div class="rounded-xl border border-dashed border-border bg-card p-10 text-center">
+        <p class="text-sm text-muted-foreground">
+          <% if @estimation.status == "processing" %>
+            Esta estimación aún se está procesando. Los resultados detallados estarán disponibles cuando finalice.
+          <% else %>
+            Esta estimación falló durante el procesamiento. No hay datos de desglose disponibles.
+          <% end %>
+        </p>
+      </div>
+    <% end %>
+  </div>
+<% else %>
+  <%# No estimation found for this document %>
+  <div class="rounded-xl border border-dashed border-border bg-card p-10 text-center">
+    <p class="text-sm text-muted-foreground">No se encontró estimación asociada a este documento.</p>
+  </div>
+<% end %>

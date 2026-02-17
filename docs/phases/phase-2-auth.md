@@ -1,5 +1,7 @@
 # Phase 2 — Authentication
 
+**Status: ✅ Completed**
+
 **Objective:** Implement session-based login/register matching the reference login screen, and protect all app routes behind authentication.
 
 **Dependencies:** Phase 1 (Tailwind, layouts, PostgreSQL)

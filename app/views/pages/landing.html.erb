@@ -1,0 +1,126 @@
+<div class="min-h-screen bg-background text-foreground">
+  <%# Nav %>
+  <header class="fixed top-0 inset-x-0 z-50 glass">
+    <div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+      <div class="flex items-center gap-2">
+        <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+          <%= icon("activity", classes: "h-4 w-4 text-primary-foreground") %>
+        </div>
+        <span class="text-sm font-semibold">LIDR RAG Estimator</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <%= link_to login_path, class: "inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors hover:bg-surface-hover hover:text-foreground h-9 px-3 text-muted-foreground" do %>
+          Iniciar sesión
+        <% end %>
+        <%= link_to login_path, class: "inline-flex items-center justify-center gap-1 rounded-md bg-primary text-primary-foreground text-sm font-medium h-9 px-3 hover:bg-primary/90 transition-colors" do %>
+          Empezar gratis <%= icon("arrow_right", classes: "h-3 w-3") %>
+        <% end %>
+      </div>
+    </div>
+  </header>
+
+  <%# Hero %>
+  <section class="relative flex min-h-[90vh] items-center justify-center overflow-hidden px-6 pt-20">
+    <%# Glow bg %>
+    <div class="pointer-events-none absolute inset-0">
+      <div class="absolute left-1/2 top-1/3 h-[500px] w-[700px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/10 blur-[120px]"></div>
+    </div>
+
+    <div class="relative z-10 mx-auto max-w-3xl text-center">
+      <div class="mb-6 inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-4 py-1.5 text-xs font-medium text-muted-foreground backdrop-blur-sm">
+        <%= icon("zap", classes: "h-3 w-3 text-primary") %>
+        Potenciado por RAG + GPT-4o
+      </div>
+
+      <h1 class="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
+        Estima proyectos de software
+        <span class="text-primary">con inteligencia artificial</span>
+      </h1>
+
+      <p class="mx-auto mt-6 max-w-xl text-base text-muted-foreground sm:text-lg">
+        Sube tus documentos de cotización, busca referencias históricas y
+        genera estimaciones precisas a tres puntos en segundos.
+      </p>
+
+      <div class="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+        <%= link_to login_path, class: "inline-flex items-center justify-center gap-2 rounded-md bg-primary text-primary-foreground text-sm font-medium h-11 px-8 hover:bg-primary/90 transition-colors glow-md" do %>
+          Comenzar ahora <%= icon("arrow_right", classes: "h-4 w-4") %>
+        <% end %>
+        <a href="#features" class="inline-flex items-center justify-center rounded-md border border-border bg-card text-sm font-medium h-11 px-8 hover:bg-surface-hover transition-colors">
+          Ver funcionalidades
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <%# Metrics %>
+  <section class="border-y border-border bg-card/40 py-12">
+    <div class="mx-auto grid max-w-5xl grid-cols-2 gap-8 px-6 sm:grid-cols-4">
+      <% [
+        { value: "150+", label: "Proyectos indexados" },
+        { value: "2.8K", label: "Chunks semánticos" },
+        { value: "340ms", label: "Latencia media" },
+        { value: "94%", label: "Precisión estimaciones" }
+      ].each do |m| %>
+        <div class="text-center">
+          <p class="text-3xl font-bold text-primary font-mono"><%= m[:value] %></p>
+          <p class="mt-1 text-xs text-muted-foreground"><%= m[:label] %></p>
+        </div>
+      <% end %>
+    </div>
+  </section>
+
+  <%# Features %>
+  <section id="features" class="py-24 px-6">
+    <div class="mx-auto max-w-5xl">
+      <div class="text-center mb-16">
+        <h2 class="text-2xl font-bold sm:text-3xl">Todo lo que necesitas para estimar</h2>
+        <p class="mt-3 text-muted-foreground">
+          Un flujo completo desde la ingesta de documentos hasta la estimación final.
+        </p>
+      </div>
+
+      <div class="grid gap-6 sm:grid-cols-2">
+        <% [
+          { icon_name: "upload", title: "Ingesta inteligente", description: "Sube tus documentos JSON de cotizaciones y el sistema los fragmenta automáticamente en chunks semánticos." },
+          { icon_name: "brain", title: "Estimación con IA", description: "Genera estimaciones a tres puntos usando contexto histórico y modelos de lenguaje avanzados." },
+          { icon_name: "search", title: "Búsqueda semántica", description: "Encuentra proyectos similares y referencias históricas mediante embeddings vectoriales." },
+          { icon_name: "bar_chart3", title: "Análisis detallado", description: "Visualiza desgloses por tareas, fases y escenarios con métricas de confianza." }
+        ].each do |f| %>
+          <div class="group rounded-xl border border-border bg-card p-6 transition-all hover:border-primary/30 hover:glow-sm">
+            <div class="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+              <%= icon(f[:icon_name], classes: "h-5 w-5 text-primary") %>
+            </div>
+            <h3 class="text-base font-semibold"><%= f[:title] %></h3>
+            <p class="mt-2 text-sm text-muted-foreground leading-relaxed"><%= f[:description] %></p>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </section>
+
+  <%# CTA %>
+  <section class="py-24 px-6">
+    <div class="mx-auto max-w-3xl rounded-2xl border border-border bg-card p-10 text-center glow-md">
+      <%= icon("shield", classes: "mx-auto mb-4 h-8 w-8 text-primary") %>
+      <h2 class="text-2xl font-bold">Empieza a estimar con precisión</h2>
+      <p class="mt-3 text-muted-foreground">
+        Crea tu cuenta gratuita y comienza a generar estimaciones basadas en datos reales de proyectos similares.
+      </p>
+      <%= link_to login_path, class: "inline-flex items-center justify-center gap-2 rounded-md bg-primary text-primary-foreground text-sm font-medium h-11 px-8 hover:bg-primary/90 transition-colors mt-6" do %>
+        Crear cuenta <%= icon("arrow_right", classes: "h-4 w-4") %>
+      <% end %>
+    </div>
+  </section>
+
+  <%# Footer %>
+  <footer class="border-t border-border py-8 px-6">
+    <div class="mx-auto flex max-w-6xl items-center justify-between text-xs text-muted-foreground">
+      <span>&copy; 2026 LIDR RAG Estimator. Todos los derechos reservados.</span>
+      <div class="flex items-center gap-1">
+        <%= icon("activity", classes: "h-3 w-3 text-primary") %>
+        <span class="font-mono">v1.0.0</span>
+      </div>
+    </div>
+  </footer>
+</div>

@@ -1,0 +1,27 @@
+<% flash.each do |type, message| %>
+  <% next if message.blank? %>
+  <%
+    classes = case type.to_s
+    when "notice", "success"
+      "border-success/20 bg-success/10 text-success"
+    when "alert", "error"
+      "border-destructive/20 bg-destructive/10 text-destructive"
+    else
+      "border-border bg-surface text-card-foreground"
+    end
+  %>
+  <div
+    data-controller="auto-dismiss"
+    data-auto-dismiss-delay-value="5000"
+    class="mb-4 flex items-center justify-between rounded-lg border px-4 py-3 text-sm transition-opacity duration-300 <%= classes %>"
+  >
+    <span><%= message %></span>
+    <button
+      type="button"
+      data-action="auto-dismiss#dismiss"
+      class="ml-4 shrink-0 opacity-70 hover:opacity-100 transition-opacity"
+    >
+      <%= icon("x", classes: "h-4 w-4") %>
+    </button>
+  </div>
+<% end %>
