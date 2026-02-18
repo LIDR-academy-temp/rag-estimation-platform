@@ -7,8 +7,20 @@ class DashboardController < ApplicationController
       .sum("chunks_breakdowns.project_overview + chunks_breakdowns.scope_block + chunks_breakdowns.line_item + chunks_breakdowns.phase + chunks_breakdowns.team_conditions")
     @chunk_distribution = compute_chunk_distribution
     @recent_documents = current_user.documents.includes(:chunks_breakdown).recent.limit(5)
-    @health_status = nil
-    @search_metrics = { total: 0, avg_latency: 0 }
+
+    begin
+      rag = RagServiceClient.new
+      @health_status = rag.health
+      rag_stats = rag.stats
+      @search_metrics = {
+        total: rag_stats.dig("search_metrics_last_30d", "total_searches") || 0,
+        avg_latency: rag_stats.dig("search_metrics_last_30d", "avg_response_time_ms") || 0
+      }
+    rescue RagServiceClient::Error => e
+      Rails.logger.warn("Dashboard RAG unavailable: #{e.message}")
+      @health_status = { "status" => "unavailable" }
+      @search_metrics = { total: 0, avg_latency: 0 }
+    end
   end
 
   private

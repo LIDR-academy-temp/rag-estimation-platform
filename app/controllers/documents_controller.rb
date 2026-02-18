@@ -14,6 +14,15 @@ class DocumentsController < ApplicationController
 
   def destroy
     document = current_user.documents.find(params[:id])
+
+    if document.external_document_id.present?
+      begin
+        RagServiceClient.new.delete_document(document.external_document_id)
+      rescue RagServiceClient::Error => e
+        Rails.logger.warn("RAG delete failed: #{e.message}")
+      end
+    end
+
     document.destroy
     redirect_to documents_path, notice: "Documento '#{document.title}' eliminado correctamente."
   end

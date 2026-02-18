@@ -25,14 +25,34 @@ class IngestController < ApplicationController
     end
     technologies = technologies.uniq
 
-    current_user.documents.create!(
+    @document = current_user.documents.create!(
       title: title,
-      raw_json: parsed,
+      raw_json: raw,
       technologies: technologies,
       status: "pending"
     )
 
-    redirect_to ingest_path, notice: "Presupuesto '#{title}' ingresado correctamente. Procesamiento pendiente."
+    begin
+      rag = RagServiceClient.new
+      response = rag.ingest({
+        quote: parsed,
+        source: "web",
+        ingested_by: current_user.email
+      })
+      ingest_result = RagResponseParser.parse_ingest(response)
+
+      @document.update!(
+        external_document_id: ingest_result[:external_document_id],
+        status: "processing"
+      )
+      IngestionStatusJob.perform_later(@document.id)
+
+      redirect_to ingest_path, notice: "Presupuesto '#{title}' ingresado correctamente. Procesamiento en curso."
+    rescue RagServiceClient::Error => e
+      Rails.logger.error("RAG ingest failed: #{e.message}")
+      @document.update!(status: "failed")
+      redirect_to ingest_path, alert: "Presupuesto guardado localmente pero el servicio RAG no está disponible."
+    end
   rescue TypeError
     redirect_to ingest_path, alert: "El JSON proporcionado no es válido."
   end

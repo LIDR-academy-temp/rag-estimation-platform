@@ -1,86 +1,108 @@
 <%= render "shared/page_header", title: "Búsqueda semántica", description: "Busca tareas, bloques funcionales y estimaciones en la base de conocimiento" %>
 
 <%# Search card %>
-<div class="rounded-xl border border-border bg-card p-5 mb-6" data-controller="search-filter">
-  <div class="flex gap-2">
-    <div class="relative flex-1">
-      <div class="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-        <%= icon("search", classes: "h-4 w-4") %>
+<div class="rounded-xl border border-border bg-card p-5 mb-6">
+  <%= form_with url: search_path, method: :get, local: true, class: "space-y-3" do %>
+    <div class="flex gap-2">
+      <div class="relative flex-1">
+        <div class="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+          <%= icon("search", classes: "h-4 w-4") %>
+        </div>
+        <input
+          type="text"
+          name="q"
+          value="<%= @query %>"
+          placeholder="Buscar: sistema de autenticación OAuth con refresh tokens..."
+          class="flex h-10 w-full rounded-md border border-border bg-surface px-3 py-2 pl-10 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
+        />
       </div>
-      <input
-        type="text"
-        placeholder="Buscar: sistema de autenticación OAuth con refresh tokens..."
-        class="flex h-10 w-full rounded-md border border-border bg-surface px-3 py-2 pl-10 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
-        data-search-filter-target="query"
-        data-action="keydown.enter->search-filter#search"
-      />
-    </div>
-    <button class="inline-flex items-center justify-center rounded-md bg-primary text-primary-foreground text-sm font-medium h-10 px-4 hover:bg-primary/90 transition-colors" data-action="search-filter#search">
-      <%= icon("search", classes: "mr-2 h-4 w-4") %> Buscar
-    </button>
-  </div>
-
-  <div class="mt-3 flex items-center gap-2">
-    <%= icon("sliders_horizontal", classes: "h-3.5 w-3.5 text-muted-foreground") %>
-    <span class="text-xs text-muted-foreground mr-1">Filtrar:</span>
-    <% %w[project_overview scope_block line_item phase team_conditions].each do |type| %>
-      <button
-        class="rounded-full border px-2.5 py-1 text-[11px] font-mono transition-colors border-border bg-surface text-muted-foreground hover:text-card-foreground"
-        data-action="search-filter#toggleType"
-        data-search-filter-target="filterBtn"
-        data-type="<%= type %>"
-      >
-        <%= type %>
+      <button type="submit" class="inline-flex items-center justify-center rounded-md bg-primary text-primary-foreground text-sm font-medium h-10 px-4 hover:bg-primary/90 transition-colors">
+        <%= icon("search", classes: "mr-2 h-4 w-4") %> Buscar
       </button>
-    <% end %>
-  </div>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <%= icon("sliders_horizontal", classes: "h-3.5 w-3.5 text-muted-foreground") %>
+      <span class="text-xs text-muted-foreground mr-1">Filtrar:</span>
+      <% %w[project_overview scope_block line_item phase team_conditions].each do |type| %>
+        <%
+          is_active = @chunk_types.include?(type)
+          active_classes = is_active ? "border-primary/40 bg-primary/10 text-primary" : "border-border bg-surface text-muted-foreground hover:text-card-foreground"
+        %>
+        <label class="rounded-full border px-2.5 py-1 text-[11px] font-mono transition-colors cursor-pointer <%= active_classes %>">
+          <input type="hidden" name="chunk_types[]" value="" disabled />
+          <input
+            type="checkbox"
+            name="chunk_types[]"
+            value="<%= type %>"
+            class="sr-only"
+            <%= "checked" if is_active %>
+            onchange="this.form.requestSubmit()"
+          />
+          <%= type %>
+        </label>
+      <% end %>
+    </div>
+  <% end %>
 </div>
 
-<%# Results (shown with mock data) %>
-<div data-search-filter-target="results" style="display: none;">
-  <p class="text-xs text-muted-foreground mb-2">5 resultados &middot; 120ms</p>
-  <div class="space-y-3">
-    <%
-      mock_results = [
-        { type: "scope_block", score: 0.87, project: "Plataforma de Gestión con IA", preview: "Backend API — API REST robusta y escalable con autenticación JWT, rate limiting, webhooks y documentación OpenAPI completa.", cost: 9_750, tech: ["Rails", "PostgreSQL", "Redis"] },
-        { type: "line_item", score: 0.85, project: "E-commerce Marketplace", preview: "Desarrollo API REST — Backend completo con autenticación, gestión de productos y pasarela de pagos.", cost: 7_500, tech: ["Rails", "PostgreSQL"] },
-        { type: "scope_block", score: 0.78, project: "CRM SaaS B2B", preview: "Módulo de integración — API de integración con servicios externos, OAuth2, webhooks bidireccionales.", cost: 6_200, tech: ["Django", "PostgreSQL"] },
-        { type: "line_item", score: 0.72, project: "App Salud Digital", preview: "API de reportes — Endpoints para generación de informes PDF, dashboards y exportación de datos.", cost: 4_500, tech: ["FastAPI", "PostgreSQL"] },
-        { type: "phase", score: 0.68, project: "Fintech Platform", preview: "Fase 2: Desarrollo Backend — Implementación de API REST, integración bancaria, sistema de notificaciones.", cost: 15_000, tech: ["Node.js", "PostgreSQL", "Redis"] }
-      ]
-    %>
-    <% mock_results.each do |r| %>
-      <div class="rounded-xl border border-border bg-card p-4 hover:border-primary/20 transition-colors">
-        <div class="flex items-start justify-between gap-4">
-          <div class="min-w-0 flex-1">
-            <div class="flex items-center gap-2 mb-1">
-              <span class="rounded bg-secondary px-1.5 py-0.5 text-[10px] font-mono text-secondary-foreground"><%= r[:type] %></span>
-              <%
-                score_class = if r[:score] >= 0.8
-                  "text-success"
-                elsif r[:score] >= 0.65
-                  "text-warning"
-                else
-                  "text-muted-foreground"
-                end
-              %>
-              <span class="text-xs font-mono font-semibold <%= score_class %>">
-                <%= (r[:score] * 100).round(0) %>%
-              </span>
-              <span class="text-xs text-muted-foreground">&middot; <%= r[:project] %></span>
-            </div>
-            <p class="text-sm text-card-foreground leading-relaxed"><%= r[:preview] %></p>
-            <div class="mt-2 flex flex-wrap gap-1">
-              <% r[:tech].each do |t| %>
-                <span class="rounded bg-muted px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground"><%= t %></span>
+<%# Results %>
+<% if @query.present? %>
+  <% if @results.any? %>
+    <p class="text-xs text-muted-foreground mb-2">
+      <%= @total %> resultado<%= @total == 1 ? "" : "s" %>
+      <% if @processing_time %>&middot; <%= @processing_time.round(0) %>ms<% end %>
+    </p>
+    <div class="space-y-3">
+      <% @results.each do |r| %>
+        <div class="rounded-xl border border-border bg-card p-4 hover:border-primary/20 transition-colors">
+          <div class="flex items-start justify-between gap-4">
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="rounded bg-secondary px-1.5 py-0.5 text-[10px] font-mono text-secondary-foreground"><%= r[:chunk_type] %></span>
+                <%
+                  score = r[:similarity_score] || 0
+                  score_class = if score >= 0.8
+                    "text-success"
+                  elsif score >= 0.65
+                    "text-warning"
+                  else
+                    "text-muted-foreground"
+                  end
+                %>
+                <span class="text-xs font-mono font-semibold <%= score_class %>">
+                  <%= (score * 100).round(0) %>%
+                </span>
+                <span class="text-xs text-muted-foreground">&middot; <%= r[:project_title] %></span>
+              </div>
+              <p class="text-sm text-card-foreground leading-relaxed"><%= r[:content_preview] %></p>
+              <% if r[:technologies].present? %>
+                <div class="mt-2 flex flex-wrap gap-1">
+                  <% r[:technologies].each do |t| %>
+                    <span class="rounded bg-muted px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground"><%= t %></span>
+                  <% end %>
+                </div>
               <% end %>
             </div>
-          </div>
-          <div class="text-right shrink-0">
-            <p class="text-sm font-semibold font-mono text-card-foreground"><%= number_with_delimiter(r[:cost]) %>€</p>
+            <% if r[:cost] %>
+              <div class="text-right shrink-0">
+                <p class="text-sm font-semibold font-mono text-card-foreground"><%= number_with_delimiter(r[:cost]) %><%= r[:currency] || "€" %></p>
+              </div>
+            <% end %>
           </div>
         </div>
-      </div>
-    <% end %>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="rounded-xl border border-border bg-card p-8 text-center">
+      <%= icon("search", classes: "h-8 w-8 text-muted-foreground mx-auto mb-2") %>
+      <p class="text-sm text-muted-foreground">No se encontraron resultados para "<%= @query %>"</p>
+      <p class="text-xs text-muted-foreground mt-1">Intenta con otros términos o ajusta los filtros</p>
+    </div>
+  <% end %>
+<% else %>
+  <div class="rounded-xl border border-border bg-card p-8 text-center">
+    <%= icon("search", classes: "h-8 w-8 text-muted-foreground mx-auto mb-2") %>
+    <p class="text-sm text-muted-foreground">Introduce un término de búsqueda para encontrar estimaciones similares</p>
   </div>
-</div>
+<% end %>
