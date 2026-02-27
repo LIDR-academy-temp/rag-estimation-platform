@@ -4,7 +4,7 @@
 
 A software estimation platform powered by AI. The Rails 8 app (`rag-estimation-platform`) is the core product — it handles UI, data persistence, and orchestration. It delegates all AI/RAG work (ingestion, semantic search, estimation) to an existing Python microservice (`rag-estimation-service`) via HTTP. The visual design comes from a React reference app (`project-blueprint-studio`) which has 8 screens with hardcoded data that we replicate in ERB + Tailwind + Hotwire.
 
-**Current state:** Phases 1–7 completed. PostgreSQL, Tailwind dark theme, authentication, 6 models with migrations, all 8 static UI screens, full backend logic with controllers, RAG service integration, and Hotwire interactivity (Turbo Frames, Turbo Streams, Stimulus controllers, CSS animations) are built. Phase 8 bug fixes in progress: critical 500-error fixes (RecordNotFound, bang creates, nil guards in RAG parser, job error handling), UX fixes (flash messages, hardcoded paths), and model validation polish.
+**Current state:** Phases 1–8 completed. PostgreSQL, Tailwind dark theme, authentication, 6 models with migrations, all 8 static UI screens, full backend logic with controllers, RAG service integration, Hotwire interactivity, and bug fixes/polish (critical 500-error fixes, nil guards, model validations) are all built. Phase 9 (testing, responsive design, accessibility, print) is pending.
 
 ---
 
@@ -18,7 +18,8 @@ Phase 1 (Setup)
                  └─▸ Phase 5 (Backend CRUD)
                       └─▸ Phase 6 (RAG Integration)
                            └─▸ Phase 7 (Interactivity)
-                                └─▸ Phase 8 (Polish & Testing)
+                                └─▸ Phase 8 (Bug Fixes & Polish)
+                                     └─▸ Phase 9 (Testing & Accessibility)
 ```
 
 Phases 4 & 5 can partially overlap (build a view then wire it up immediately), but the plan sequences them for focused visual QA before introducing data flows.
@@ -36,7 +37,8 @@ Phases 4 & 5 can partially overlap (build a view then wire it up immediately), b
 | 5 | Backend Logic & Controllers | ✅ Completed | Phases 3, 4 | [phase-5-backend.md](phases/phase-5-backend.md) |
 | 6 | RAG Service Integration | ✅ Completed | Phase 5 | [phase-6-rag-integration.md](phases/phase-6-rag-integration.md) |
 | 7 | Real-Time & Interactive Features | ✅ Completed | Phases 4, 5, 6 | [phase-7-interactivity.md](phases/phase-7-interactivity.md) |
-| 8 | Polish, Testing & Validation | ⬚ Pending | Phases 1–7 | [phase-8-polish-testing.md](phases/phase-8-polish-testing.md) |
+| 8 | Bug Fixes & Polish | ✅ Completed | Phases 1–7 | [phase-8-polish-testing.md](phases/phase-8-polish-testing.md) |
+| 9 | Testing, Responsive & Accessibility | ⬚ Pending | Phases 1–8 | [phase-9.md](phases/phase-9.md) |
 
 ---
 
