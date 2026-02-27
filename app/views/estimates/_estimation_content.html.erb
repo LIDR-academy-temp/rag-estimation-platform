@@ -1,0 +1,116 @@
+<div class="space-y-6" data-controller="estimate-type collapsible">
+  <%# Meta row %>
+  <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+    <% [
+      { icon_name: "calendar", label: "Fecha", value: estimation.created_at.strftime("%Y-%m-%d") },
+      { icon_name: "layers", label: "Bloques", value: estimation.functional_blocks.size.to_s },
+      { icon_name: "clock", label: "Tareas", value: estimation.tasks.size.to_s },
+      { icon_name: "euro", label: "Tarifa base", value: "#{estimation.global_rate.to_i}#{estimation.currency == 'EUR' ? "\u20AC" : '$'}/h" }
+    ].each do |m| %>
+      <div class="rounded-xl border border-border bg-card p-4">
+        <div class="flex items-center gap-2 text-muted-foreground mb-1">
+          <%= icon(m[:icon_name], classes: "h-3.5 w-3.5") %>
+          <span class="text-xs"><%= m[:label] %></span>
+        </div>
+        <p class="text-sm font-semibold font-mono text-card-foreground"><%= m[:value] %></p>
+      </div>
+    <% end %>
+  </div>
+
+  <%# Status %>
+  <div class="rounded-xl border border-border bg-card p-5">
+    <div class="flex flex-wrap items-center gap-4">
+      <div class="flex items-center gap-2">
+        <span class="text-xs text-muted-foreground">Estado:</span>
+        <%= render "shared/status_badge", status: estimation.status %>
+      </div>
+      <% if estimation.confidence_score && estimation.confidence_score > 0 %>
+        <div class="flex items-center gap-2">
+          <%= icon("sparkles", classes: "h-3.5 w-3.5 text-primary") %>
+          <span class="text-xs text-muted-foreground">Confianza:</span>
+          <span class="text-xs font-semibold font-mono <%= confidence_color(estimation.confidence_score) %>">
+            <%= (estimation.confidence_score * 100).round(0) %>%
+          </span>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <% if estimation.status == "processing" %>
+    <%# Processing state: skeleton + spinner %>
+    <div class="rounded-xl border border-border bg-card p-8">
+      <div class="flex flex-col items-center justify-center gap-4">
+        <div class="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+        <p class="text-sm font-medium text-card-foreground">Analizando transcripciones...</p>
+        <p class="text-xs text-muted-foreground">El servicio AI esta procesando la informacion. Esto puede tardar unos segundos.</p>
+      </div>
+    </div>
+
+    <%# Skeleton blocks %>
+    <div class="space-y-3">
+      <% 3.times do %>
+        <div class="rounded-xl border border-border bg-card p-5 animate-pulse">
+          <div class="h-4 bg-muted rounded w-1/3 mb-3"></div>
+          <div class="space-y-2">
+            <div class="h-3 bg-muted rounded w-full"></div>
+            <div class="h-3 bg-muted rounded w-2/3"></div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+  <% elsif estimation.status == "failed" %>
+    <%# Failed state: error message + retry button %>
+    <div class="rounded-xl border border-destructive/30 bg-destructive/5 p-6">
+      <div class="flex flex-col items-center gap-4 text-center">
+        <div class="flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
+          <svg class="h-6 w-6 text-destructive" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+          </svg>
+        </div>
+        <div>
+          <p class="text-sm font-semibold text-destructive">Error en la estimacion</p>
+          <% if estimation.error_message.present? %>
+            <p class="text-sm text-muted-foreground mt-1"><%= estimation.error_message %></p>
+          <% end %>
+        </div>
+        <%= link_to retry_estimate_path(estimation), data: { turbo_method: :post }, class: "inline-flex items-center justify-center rounded-md bg-primary text-primary-foreground text-sm font-medium h-9 px-4 hover:bg-primary/90 transition-colors" do %>
+          <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182" />
+          </svg>
+          Reintentar analisis
+        <% end %>
+      </div>
+    </div>
+
+  <% elsif estimation.status == "structuring" && estimation.functional_blocks.any? %>
+    <%= render "estimates/step2_structuring", estimation: estimation %>
+
+  <% elsif estimation.status == "completed" && estimation.functional_blocks.any? %>
+    <%= render "estimates/step3_completed", estimation: estimation %>
+
+  <% elsif estimation.status == "draft" %>
+    <div class="rounded-xl border border-dashed border-border bg-card p-10 text-center">
+      <p class="text-sm text-muted-foreground">
+        Esta estimacion esta en borrador. Agrega transcripciones y ejecuta el analisis para ver resultados detallados.
+      </p>
+    </div>
+  <% end %>
+
+  <%# References %>
+  <% if estimation.status.in?(%w[structuring completed]) && estimation.references.any? %>
+    <div class="rounded-xl border border-border bg-card p-5">
+      <h2 class="text-sm font-semibold text-card-foreground mb-4">Referencias historicas utilizadas</h2>
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <% estimation.references.by_similarity.each do |ref| %>
+          <div class="rounded-lg border border-border bg-surface p-4">
+            <p class="text-sm font-medium text-card-foreground"><%= ref.title %></p>
+            <div class="mt-2 flex items-center gap-2">
+              <span class="text-xs font-mono text-primary"><%= (ref.similarity_score * 100).round(0) %>% similar</span>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+</div>

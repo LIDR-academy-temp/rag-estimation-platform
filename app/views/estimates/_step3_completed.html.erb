@@ -1,0 +1,159 @@
+<%# locals: (estimation:) %>
+<%
+  blocks = estimation.functional_blocks.includes(:tasks)
+  total_tasks = blocks.sum { |b| b.tasks.size }
+  total_hours = blocks.sum { |b| b.total_hours_expected }
+  total_cost = blocks.sum { |b| b.total_cost(:expected) }
+  max_hours = blocks.flat_map { |b| b.tasks.map(&:hours_expected) }.compact.max || 1
+  currency_symbol = estimation.currency == "EUR" ? "\u20AC" : "$"
+  working_days = (total_hours / 8.0).round(1)
+%>
+
+<%= form_with model: estimation, url: update_estimate_estimation_path(estimation), method: :patch, data: { controller: "cost-calculator" } do |f| %>
+  <div class="space-y-5">
+    <%# Summary %>
+    <div class="rounded-xl border border-border bg-card p-4">
+      <div class="flex items-center gap-3">
+        <%= icon("sparkles", classes: "h-5 w-5 text-primary") %>
+        <p class="text-sm text-card-foreground">
+          Estimacion completada para
+          <span class="font-semibold"><%= total_tasks %></span> tareas en
+          <span class="font-semibold"><%= blocks.size %></span> bloques.
+          Tiempo total: <span class="font-semibold font-mono" data-cost-calculator-target="totalHoursText"><%= total_hours.to_i %></span>h
+          (<span class="font-mono" data-cost-calculator-target="workingDaysText"><%= working_days %></span> dias laborables)
+        </p>
+      </div>
+    </div>
+
+    <%# Global rate %>
+    <div class="rounded-xl border border-border bg-card p-4">
+      <div class="flex items-center gap-4">
+        <label class="text-sm font-medium text-card-foreground whitespace-nowrap">Tarifa global</label>
+        <div class="flex items-center gap-2">
+          <input type="number"
+            name="estimation[global_rate]"
+            value="<%= estimation.global_rate.to_i %>"
+            min="1"
+            data-cost-calculator-target="globalRate"
+            data-action="input->cost-calculator#recalculate"
+            class="h-9 w-24 rounded-md border border-border bg-surface px-3 text-sm font-mono text-card-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary" />
+          <span class="text-sm text-muted-foreground"><%= currency_symbol %>/h</span>
+        </div>
+      </div>
+    </div>
+
+    <%# Stats grid %>
+    <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div class="rounded-xl border border-border bg-card p-4">
+        <div class="flex items-center gap-2 text-muted-foreground mb-1">
+          <%= icon("clock", classes: "h-3.5 w-3.5") %>
+          <span class="text-xs">Total horas</span>
+        </div>
+        <p class="text-sm font-semibold font-mono text-card-foreground" data-cost-calculator-target="statTotalHours"><%= total_hours.to_i %>h</p>
+      </div>
+      <div class="rounded-xl border border-border bg-card p-4">
+        <div class="flex items-center gap-2 text-muted-foreground mb-1">
+          <%= icon("layers", classes: "h-3.5 w-3.5") %>
+          <span class="text-xs">Bloques</span>
+        </div>
+        <p class="text-sm font-semibold font-mono text-card-foreground"><%= blocks.size %></p>
+      </div>
+      <div class="rounded-xl border border-border bg-card p-4">
+        <div class="flex items-center gap-2 text-muted-foreground mb-1">
+          <%= icon("check_circle", classes: "h-3.5 w-3.5") %>
+          <span class="text-xs">Tareas</span>
+        </div>
+        <p class="text-sm font-semibold font-mono text-card-foreground"><%= total_tasks %></p>
+      </div>
+      <div class="rounded-xl border border-border bg-card p-4">
+        <div class="flex items-center gap-2 text-muted-foreground mb-1">
+          <%= icon("euro", classes: "h-3.5 w-3.5") %>
+          <span class="text-xs">Coste total</span>
+        </div>
+        <p class="text-sm font-semibold font-mono text-card-foreground" data-cost-calculator-target="statTotalCost"><%= number_with_delimiter(total_cost.to_i) %><%= currency_symbol %></p>
+      </div>
+    </div>
+
+    <%# Block breakdown %>
+    <div class="space-y-3" data-controller="collapsible">
+      <% blocks.each_with_index do |block, bi| %>
+        <%
+          block_hours = block.total_hours_expected
+          block_cost = block.total_cost(:expected)
+        %>
+        <div class="rounded-xl border border-border bg-card overflow-hidden" data-collapsible-target="block" data-cost-calculator-target="blockEntry">
+          <div class="flex items-center gap-2 px-5 py-3.5 bg-surface/50">
+            <button type="button" class="text-muted-foreground hover:text-card-foreground transition-colors" data-action="collapsible#toggle" aria-expanded="true">
+              <span data-collapsible-target="iconExpanded"><%= icon("chevron_down", classes: "h-4 w-4") %></span>
+              <span data-collapsible-target="iconCollapsed" class="hidden"><%= icon("chevron_right", classes: "h-4 w-4") %></span>
+            </button>
+            <h3 class="flex-1 text-sm font-semibold text-card-foreground"><%= block.name %></h3>
+            <span class="text-xs text-muted-foreground font-mono" data-cost-calculator-target="blockCost"><%= number_with_delimiter(block_cost.to_i) %><%= currency_symbol %></span>
+            <span class="text-sm font-mono font-semibold text-primary" data-cost-calculator-target="blockHours"><%= block_hours.to_i %>h</span>
+          </div>
+
+          <div class="px-5 py-3 space-y-1.5" data-collapsible-target="body">
+            <% block.tasks.each_with_index do |task, ti| %>
+              <%
+                task_hours = task.hours_expected.to_f
+                task_rate = task.rate || estimation.global_rate
+                task_cost = task_hours * task_rate.to_f
+                pct = max_hours > 0 ? (task_hours / max_hours * 100).round(1) : 0
+              %>
+              <div class="flex items-center justify-between rounded-lg bg-surface px-4 py-2.5 gap-3" data-cost-calculator-target="taskRow">
+                <span class="text-sm text-card-foreground flex-1 min-w-0 truncate"><%= task.name %></span>
+
+                <input type="hidden" name="estimation[functional_blocks_attributes][<%= bi %>][id]" value="<%= block.id %>" />
+                <input type="hidden" name="estimation[functional_blocks_attributes][<%= bi %>][tasks_attributes][<%= ti %>][id]" value="<%= task.id %>" />
+
+                <%# Rate per task %>
+                <div class="flex items-center gap-1 shrink-0">
+                  <input type="number"
+                    name="estimation[functional_blocks_attributes][<%= bi %>][tasks_attributes][<%= ti %>][rate]"
+                    value="<%= task_rate.to_i %>"
+                    min="0"
+                    data-cost-calculator-target="taskRate"
+                    data-action="input->cost-calculator#recalculate"
+                    class="h-7 w-16 rounded border border-border bg-card px-2 text-xs font-mono text-card-foreground text-right focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary" />
+                  <span class="text-xs text-muted-foreground"><%= currency_symbol %>/h</span>
+                </div>
+
+                <%# Progress bar %>
+                <span class="w-20 shrink-0">
+                  <div class="h-1.5 rounded-full bg-muted overflow-hidden" data-cost-calculator-target="progressBar">
+                    <div class="h-full rounded-full bg-primary transition-all" style="width: <%= pct %>%" data-cost-calculator-target="progressFill"></div>
+                  </div>
+                </span>
+
+                <%# Hours %>
+                <div class="flex items-center gap-1 shrink-0">
+                  <input type="number"
+                    name="estimation[functional_blocks_attributes][<%= bi %>][tasks_attributes][<%= ti %>][hours_expected]"
+                    value="<%= task_hours.to_i %>"
+                    min="0"
+                    data-cost-calculator-target="taskHours"
+                    data-action="input->cost-calculator#recalculate"
+                    class="h-7 w-14 rounded border border-border bg-card px-2 text-sm font-mono font-medium text-card-foreground text-right focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary" />
+                  <span class="text-xs text-muted-foreground">h</span>
+                </div>
+
+                <%# Cost %>
+                <span class="text-sm font-mono font-semibold text-card-foreground min-w-[4.5rem] text-right shrink-0" data-cost-calculator-target="taskCost">
+                  <%= number_with_delimiter(task_cost.to_i) %><%= currency_symbol %>
+                </span>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <%# Submit %>
+    <div class="flex justify-end pt-2">
+      <button type="submit" class="inline-flex items-center justify-center rounded-md bg-primary text-primary-foreground text-sm font-medium h-10 px-4 hover:bg-primary/90 transition-colors">
+        <%= icon("check_circle", classes: "mr-2 h-4 w-4") %>
+        Guardar estimacion
+      </button>
+    </div>
+  </div>
+<% end %>

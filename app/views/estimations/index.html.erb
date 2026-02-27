@@ -1,0 +1,182 @@
+<% content_for :page_actions do %>
+  <%= link_to new_estimate_path, class: "inline-flex items-center justify-center rounded-md bg-primary text-primary-foreground text-sm font-medium h-9 px-4 hover:bg-primary/90 transition-colors" do %>
+    <%= icon("plus", classes: "mr-2 h-4 w-4") %> Nueva Estimación
+  <% end %>
+<% end %>
+
+<%= render "shared/page_header", title: "Estimaciones", description: "Gestiona las estimaciones generadas por el sistema" %>
+
+<%# Search & Filter %>
+<div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+  <%= form_with url: estimations_path, method: :get, data: { turbo_frame: "estimations_table" }, class: "relative max-w-sm flex-1" do %>
+    <div class="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+      <%= icon("search", classes: "h-4 w-4") %>
+    </div>
+    <label for="search_estimations" class="sr-only">Buscar estimaciones</label>
+    <input type="hidden" name="status" value="<%= params[:status] %>">
+    <input
+      id="search_estimations"
+      type="text"
+      name="q"
+      value="<%= params[:q] %>"
+      placeholder="Buscar por título..."
+      class="flex h-10 w-full rounded-md border border-border bg-surface px-3 py-2 pl-10 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
+    />
+  <% end %>
+
+  <div class="flex items-center gap-1.5">
+    <%
+      statuses = [
+        { value: nil, label: "Todos" },
+        { value: "completed", label: "Completados" },
+        { value: "processing", label: "En proceso" },
+        { value: "draft", label: "Borrador" },
+        { value: "failed", label: "Fallidos" }
+      ]
+    %>
+    <% statuses.each do |s| %>
+      <%
+        is_active = params[:status].to_s == s[:value].to_s
+        btn_class = is_active ?
+          "inline-flex items-center rounded-full px-3 py-1 text-xs font-medium bg-primary text-primary-foreground" :
+          "inline-flex items-center rounded-full px-3 py-1 text-xs font-medium border border-border text-muted-foreground hover:bg-surface-hover transition-colors"
+      %>
+      <%= link_to estimations_path(q: params[:q], status: s[:value]), data: { turbo_frame: "estimations_table" }, class: btn_class do %>
+        <%= s[:label] %>
+      <% end %>
+    <% end %>
+  </div>
+</div>
+
+<%= turbo_frame_tag "estimations_table" do %>
+  <% if @estimations.any? %>
+    <%# Mobile cards %>
+    <div class="space-y-3 sm:hidden">
+      <% @estimations.each do |est| %>
+        <div class="rounded-xl border border-border bg-card p-4">
+          <div class="flex items-start justify-between gap-2 mb-2">
+            <p class="text-sm font-medium text-card-foreground truncate"><%= est.title %></p>
+            <%= render "shared/status_badge", status: est.status %>
+          </div>
+          <div class="grid grid-cols-3 gap-2 mb-3 text-xs text-muted-foreground">
+            <div>
+              <span class="block text-[10px] uppercase tracking-wide">Horas</span>
+              <span class="font-mono font-medium text-card-foreground"><%= est.total_hours_expected&.to_i || "—" %>h</span>
+            </div>
+            <div>
+              <span class="block text-[10px] uppercase tracking-wide">Coste</span>
+              <span class="font-mono font-medium text-card-foreground"><%= est.total_cost_expected ? "#{number_with_delimiter(est.total_cost_expected.to_i)}€" : "—" %></span>
+            </div>
+            <div>
+              <span class="block text-[10px] uppercase tracking-wide">Confianza</span>
+              <span class="font-mono font-medium text-card-foreground"><%= est.confidence_score ? "#{(est.confidence_score * 100).round(0)}%" : "—" %></span>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <%= link_to estimate_detail_path(est), class: "inline-flex items-center gap-1 rounded px-2 py-1 text-xs text-muted-foreground hover:bg-surface-hover hover:text-card-foreground transition-colors", aria: { label: "Ver #{est.title}" } do %>
+              <%= icon("eye", classes: "h-3.5 w-3.5") %> Ver
+            <% end %>
+            <% if est.status.in?(%w[completed draft]) %>
+              <%= link_to edit_estimation_path(est), class: "inline-flex items-center gap-1 rounded px-2 py-1 text-xs text-muted-foreground hover:bg-surface-hover hover:text-card-foreground transition-colors", aria: { label: "Editar #{est.title}" } do %>
+                <%= icon("pencil", classes: "h-3.5 w-3.5") %> Editar
+              <% end %>
+            <% end %>
+            <%= button_to estimation_destroy_path(est), method: :delete, class: "inline-flex items-center gap-1 rounded px-2 py-1 text-xs text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors", data: { turbo_confirm: "¿Estás seguro de que deseas eliminar '#{est.title}'?" }, aria: { label: "Eliminar #{est.title}" } do %>
+              <%= icon("trash2", classes: "h-3.5 w-3.5") %> Eliminar
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <%# Desktop table %>
+    <div class="rounded-xl border border-border bg-card overflow-hidden hidden sm:block">
+      <div class="grid grid-cols-[1fr_100px_90px_110px_80px_100px_100px] gap-2 border-b border-border bg-surface px-5 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+        <span>Título</span>
+        <span>Estado</span>
+        <span class="text-right">Horas</span>
+        <span class="text-right">Coste</span>
+        <span class="text-right">Confianza</span>
+        <span>Fecha</span>
+        <span></span>
+      </div>
+
+      <div class="divide-y divide-border">
+        <% @estimations.each do |est| %>
+          <div class="grid grid-cols-[1fr_100px_90px_110px_80px_100px_100px] gap-2 items-center px-5 py-3 hover:bg-surface transition-colors">
+            <div class="min-w-0">
+              <p class="text-sm text-card-foreground truncate"><%= est.title %></p>
+              <% if est.description.present? %>
+                <p class="text-xs text-muted-foreground truncate mt-0.5"><%= truncate(est.description, length: 60) %></p>
+              <% end %>
+            </div>
+            <div>
+              <%= render "shared/status_badge", status: est.status %>
+            </div>
+            <span class="text-sm font-mono text-card-foreground text-right"><%= est.total_hours_expected&.to_i || "—" %>h</span>
+            <span class="text-sm font-mono text-card-foreground text-right"><%= est.total_cost_expected ? "#{number_with_delimiter(est.total_cost_expected.to_i)}€" : "—" %></span>
+            <span class="text-sm font-mono text-card-foreground text-right"><%= est.confidence_score ? "#{(est.confidence_score * 100).round(0)}%" : "—" %></span>
+            <span class="text-xs text-muted-foreground"><%= est.created_at.strftime("%d/%m/%Y") %></span>
+            <div class="flex items-center gap-1">
+              <%= link_to estimate_detail_path(est), class: "rounded p-1.5 text-muted-foreground hover:bg-surface-hover hover:text-card-foreground transition-colors", aria: { label: "Ver #{est.title}" } do %>
+                <%= icon("eye", classes: "h-3.5 w-3.5") %>
+              <% end %>
+              <% if est.status.in?(%w[completed draft]) %>
+                <%= link_to edit_estimation_path(est), class: "rounded p-1.5 text-muted-foreground hover:bg-surface-hover hover:text-card-foreground transition-colors", aria: { label: "Editar #{est.title}" } do %>
+                  <%= icon("pencil", classes: "h-3.5 w-3.5") %>
+                <% end %>
+              <% end %>
+              <%= button_to estimation_destroy_path(est), method: :delete, class: "rounded p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors", data: { turbo_confirm: "¿Estás seguro de que deseas eliminar '#{est.title}'?" }, aria: { label: "Eliminar #{est.title}" } do %>
+                <%= icon("trash2", classes: "h-3.5 w-3.5") %>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% else %>
+    <%# Empty state %>
+    <div class="rounded-xl border border-dashed border-border bg-card p-10 text-center">
+      <%= icon("layers", classes: "h-10 w-10 text-muted-foreground mx-auto mb-3") %>
+      <p class="text-sm font-medium text-card-foreground mb-1">No hay estimaciones todavía</p>
+      <p class="text-xs text-muted-foreground mb-4">Crea tu primera estimación desde una transcripción</p>
+      <%= link_to new_estimate_path, class: "inline-flex items-center justify-center rounded-md bg-primary text-primary-foreground text-sm font-medium h-9 px-4 hover:bg-primary/90 transition-colors" do %>
+        <%= icon("plus", classes: "mr-2 h-4 w-4") %> Nueva Estimación
+      <% end %>
+    </div>
+  <% end %>
+
+  <% if @pagy.pages > 1 %>
+    <nav class="mt-6 flex items-center justify-center gap-1" aria-label="Paginación">
+      <% if @pagy.prev %>
+        <%= link_to estimations_path(page: @pagy.prev, q: params[:q], status: params[:status]), data: { turbo_frame: "estimations_table" }, class: "inline-flex h-9 w-9 items-center justify-center rounded-md border border-border bg-card text-sm hover:bg-surface-hover transition-colors" do %>
+          <%= icon("arrow_left", classes: "h-4 w-4") %>
+        <% end %>
+      <% else %>
+        <span class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-border bg-card text-sm opacity-50 cursor-not-allowed">
+          <%= icon("arrow_left", classes: "h-4 w-4") %>
+        </span>
+      <% end %>
+
+      <% @pagy.series.each do |item| %>
+        <% if item == :gap %>
+          <span class="inline-flex h-9 w-9 items-center justify-center text-sm text-muted-foreground">&hellip;</span>
+        <% elsif item.is_a?(String) %>
+          <span class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-primary text-primary-foreground text-sm font-medium"><%= item %></span>
+        <% else %>
+          <%= link_to item, estimations_path(page: item, q: params[:q], status: params[:status]), data: { turbo_frame: "estimations_table" }, class: "inline-flex h-9 w-9 items-center justify-center rounded-md border border-border bg-card text-sm hover:bg-surface-hover transition-colors" %>
+        <% end %>
+      <% end %>
+
+      <% if @pagy.next %>
+        <%= link_to estimations_path(page: @pagy.next, q: params[:q], status: params[:status]), data: { turbo_frame: "estimations_table" }, class: "inline-flex h-9 w-9 items-center justify-center rounded-md border border-border bg-card text-sm hover:bg-surface-hover transition-colors" do %>
+          <%= icon("arrow_right", classes: "h-4 w-4") %>
+        <% end %>
+      <% else %>
+        <span class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-border bg-card text-sm opacity-50 cursor-not-allowed">
+          <%= icon("arrow_right", classes: "h-4 w-4") %>
+        </span>
+      <% end %>
+    </nav>
+  <% end %>
+<% end %>

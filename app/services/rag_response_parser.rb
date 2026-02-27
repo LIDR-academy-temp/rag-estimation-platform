@@ -51,7 +51,12 @@ class RagResponseParser
     cost = detail["estimated_cost"] || {}
     confidence = detail["confidence"] || {}
 
+    notes = detail["notes"]
+    summary_parts = [detail["summary"], notes].compact
+    description = summary_parts.join("\n\n") if summary_parts.any?
+
     estimation_attrs = {
+      description: description,
       confidence_score: confidence["score"],
       confidence_level: confidence["level"],
       technologies: detail["suggested_technologies"],

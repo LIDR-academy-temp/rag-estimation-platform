@@ -25,13 +25,16 @@
         { path: ingest_path, icon: "upload", label: "Ingesta" },
         { path: estimate_path, icon: "brain", label: "Estimación" },
         { path: search_path, icon: "search", label: "Búsqueda" },
-        { path: documents_path, icon: "file_text", label: "Estimaciones" },
+        { path: estimations_path, icon: "layers", label: "Estimaciones" },
+        { path: documents_path, icon: "database", label: "Historial Ingesta" },
       ]
     %>
 
     <% nav_items.each do |item| %>
       <%
-        is_active = current_page?(item[:path]) || (item[:path] == documents_path && controller_name == "documents")
+        is_active = current_page?(item[:path]) ||
+          (item[:path] == documents_path && controller_name == "documents") ||
+          (item[:path] == estimations_path && controller_name == "estimations")
         link_classes = if is_active
           "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors bg-primary/10 text-primary glow-sm"
         else

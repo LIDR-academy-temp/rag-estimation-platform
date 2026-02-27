@@ -1,17 +1,6 @@
 <%= render "shared/page_header", title: "Generar estimación", description: "Analiza reuniones con cliente para generar estimaciones basadas en datos históricos" %>
 
-<%# Stepper (visual only) %>
-<div class="mb-8 flex items-center justify-center gap-2">
-  <div class="flex items-center gap-2 rounded-full px-4 py-2 text-xs font-medium bg-primary text-primary-foreground">
-    <%= icon("file_text", classes: "h-3.5 w-3.5") %>
-    <span class="hidden sm:inline">Transcripciones</span>
-  </div>
-  <div class="h-px w-8 sm:w-16 bg-border"></div>
-  <div class="flex items-center gap-2 rounded-full px-4 py-2 text-xs font-medium bg-surface text-muted-foreground">
-    <%= icon("brain", classes: "h-3.5 w-3.5") %>
-    <span class="hidden sm:inline">Análisis</span>
-  </div>
-</div>
+<%= render "estimates/stepper", current_step: 0 %>
 
 <%= form_with url: estimates_path, method: :post, data: { controller: "transcription" } do |f| %>
   <div class="space-y-5">

@@ -1,0 +1,90 @@
+<% content_for :page_actions do %>
+  <%= link_to estimations_path, class: "inline-flex items-center justify-center rounded-md border border-border bg-card text-sm font-medium h-9 px-3 hover:bg-surface-hover transition-colors" do %>
+    <%= icon("arrow_left", classes: "mr-2 h-4 w-4") %> Cancelar
+  <% end %>
+<% end %>
+
+<%= render "shared/page_header", title: "Editar Estimación", description: @estimation.title %>
+
+<%= form_with model: @estimation, url: estimation_update_path(@estimation), method: :patch, class: "space-y-6" do |f| %>
+  <%# General section %>
+  <div class="rounded-xl border border-border bg-card p-5 space-y-4">
+    <h2 class="text-sm font-semibold text-card-foreground">Información general</h2>
+
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div>
+        <label for="estimation_title" class="block text-xs font-medium text-muted-foreground mb-1">Título</label>
+        <%= f.text_field :title, id: "estimation_title", class: "flex h-10 w-full rounded-md border border-border bg-surface px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary" %>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label for="estimation_global_rate" class="block text-xs font-medium text-muted-foreground mb-1">Tarifa global (/h)</label>
+          <%= f.number_field :global_rate, id: "estimation_global_rate", step: 0.01, min: 0, class: "flex h-10 w-full rounded-md border border-border bg-surface px-3 py-2 text-sm font-mono placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary" %>
+        </div>
+        <div>
+          <label for="estimation_currency" class="block text-xs font-medium text-muted-foreground mb-1">Moneda</label>
+          <%= f.select :currency, [["EUR (€)", "EUR"], ["USD ($)", "USD"], ["GBP (£)", "GBP"]], {}, id: "estimation_currency", class: "flex h-10 w-full rounded-md border border-border bg-surface px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary" %>
+        </div>
+      </div>
+    </div>
+    <div>
+      <label for="estimation_description" class="block text-xs font-medium text-muted-foreground mb-1">Descripción</label>
+      <%= f.text_area :description, id: "estimation_description", rows: 2, class: "flex w-full rounded-md border border-border bg-surface px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary" %>
+    </div>
+  </div>
+
+  <%# Functional blocks %>
+  <div class="space-y-4">
+    <h2 class="text-sm font-semibold text-card-foreground">Bloques funcionales</h2>
+
+    <%= f.fields_for :functional_blocks do |bf| %>
+      <div class="rounded-xl border border-border bg-card overflow-hidden">
+        <div class="flex items-center gap-3 px-5 py-3.5 bg-surface/50 border-b border-border">
+          <%= bf.hidden_field :id %>
+          <%= bf.hidden_field :position %>
+          <span class="flex h-6 w-6 items-center justify-center rounded bg-primary/10 text-xs font-mono font-semibold text-primary"><%= bf.index + 1 %></span>
+          <%= bf.text_field :name, placeholder: "Nombre del bloque", class: "flex-1 h-8 rounded-md border border-border bg-surface px-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary" %>
+          <label class="inline-flex items-center gap-1.5 text-xs text-destructive cursor-pointer">
+            <%= bf.check_box :_destroy, class: "rounded border-border" %>
+            Eliminar bloque
+          </label>
+        </div>
+
+        <div class="px-5 py-3 space-y-2">
+          <%# Task header %>
+          <div class="hidden sm:grid grid-cols-[1fr_90px_90px_90px_90px_40px] gap-2 text-[10px] font-medium text-muted-foreground uppercase tracking-wider px-2 pb-1">
+            <span>Tarea</span>
+            <span class="text-right">Optimista (h)</span>
+            <span class="text-right">Esperado (h)</span>
+            <span class="text-right">Pesimista (h)</span>
+            <span class="text-right">Tarifa</span>
+            <span></span>
+          </div>
+
+          <%= bf.fields_for :tasks do |tf| %>
+            <div class="grid grid-cols-1 sm:grid-cols-[1fr_90px_90px_90px_90px_40px] gap-2 items-center rounded-lg bg-surface px-2 py-2">
+              <%= tf.hidden_field :id %>
+              <%= tf.hidden_field :position %>
+              <%= tf.text_field :name, placeholder: "Nombre de la tarea", class: "h-8 rounded-md border border-border bg-card px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary" %>
+              <%= tf.number_field :hours_optimistic, step: 0.5, min: 0, placeholder: "Opt.", class: "h-8 rounded-md border border-border bg-card px-2 text-sm font-mono text-right focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary" %>
+              <%= tf.number_field :hours_expected, step: 0.5, min: 0, placeholder: "Esp.", class: "h-8 rounded-md border border-border bg-card px-2 text-sm font-mono text-right focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary" %>
+              <%= tf.number_field :hours_pessimistic, step: 0.5, min: 0, placeholder: "Pes.", class: "h-8 rounded-md border border-border bg-card px-2 text-sm font-mono text-right focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary" %>
+              <%= tf.number_field :rate, step: 0.01, min: 0, placeholder: "€/h", class: "h-8 rounded-md border border-border bg-card px-2 text-sm font-mono text-right focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary" %>
+              <label class="flex items-center justify-center cursor-pointer" title="Eliminar tarea">
+                <%= tf.check_box :_destroy, class: "rounded border-border text-destructive" %>
+              </label>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <%# Actions %>
+  <div class="flex items-center justify-end gap-3">
+    <%= link_to estimations_path, class: "inline-flex items-center justify-center rounded-md border border-border bg-card text-sm font-medium h-9 px-4 hover:bg-surface-hover transition-colors" do %>
+      Cancelar
+    <% end %>
+    <%= f.submit "Guardar cambios", class: "inline-flex items-center justify-center rounded-md bg-primary text-primary-foreground text-sm font-medium h-9 px-4 hover:bg-primary/90 transition-colors cursor-pointer" %>
+  </div>
+<% end %>
