@@ -9,7 +9,9 @@
           <div class="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
             <%= icon("search", classes: "h-4 w-4") %>
           </div>
+          <label for="search_query" class="sr-only">Término de búsqueda semántica</label>
           <input
+            id="search_query"
             type="text"
             name="q"
             value="<%= @query %>"

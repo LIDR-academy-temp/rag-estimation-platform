@@ -13,7 +13,9 @@
     <div class="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
       <%= icon("search", classes: "h-4 w-4") %>
     </div>
+    <label for="search_documents" class="sr-only">Buscar estimaciones</label>
     <input
+      id="search_documents"
       type="text"
       name="q"
       value="<%= params[:q] %>"
@@ -24,52 +26,94 @@
 </div>
 
 <%= turbo_frame_tag "documents_table" do %>
-  <%# Table %>
-  <div class="rounded-xl border border-border bg-card overflow-hidden">
-    <%# Header %>
-    <div class="grid grid-cols-[1fr_100px_80px_100px_120px_80px] gap-2 border-b border-border bg-surface px-5 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-      <span>Proyecto</span>
-      <span>Estado</span>
-      <span>Chunks</span>
-      <span class="text-right">Presupuesto</span>
-      <span>Duración</span>
-      <span></span>
-    </div>
-
-    <%# Rows %>
-    <div class="divide-y divide-border">
+  <% if @documents.any? %>
+    <%# Mobile cards %>
+    <div class="space-y-3 sm:hidden">
       <% @documents.each do |doc| %>
-        <div class="grid grid-cols-[1fr_100px_80px_100px_120px_80px] gap-2 items-center px-5 py-3 hover:bg-surface transition-colors">
-          <div class="min-w-0">
-            <p class="text-sm text-card-foreground truncate"><%= doc.title %></p>
-            <div class="flex flex-wrap gap-1 mt-1">
-              <% techs = doc.technologies.is_a?(Array) ? doc.technologies : [] %>
-              <% techs.first(3).each do |t| %>
-                <span class="rounded bg-secondary px-1.5 py-0.5 text-[10px] font-mono text-secondary-foreground"><%= t %></span>
-              <% end %>
-              <% if techs.length > 3 %>
-                <span class="text-[10px] text-muted-foreground">+<%= techs.length - 3 %></span>
-              <% end %>
-            </div>
-          </div>
-          <div>
+        <div class="rounded-xl border border-border bg-card p-4">
+          <div class="flex items-start justify-between gap-2 mb-2">
+            <p class="text-sm font-medium text-card-foreground"><%= doc.title %></p>
             <%= render "shared/status_badge", status: doc.status %>
           </div>
-          <span class="text-sm font-mono text-muted-foreground"><%= doc.chunks_count %></span>
-          <span class="text-sm font-mono text-card-foreground text-right"><%= doc.budget ? "#{number_with_delimiter(doc.budget.to_i)}€" : "—" %></span>
-          <span class="text-xs text-muted-foreground"><%= doc.duration || "—" %></span>
-          <div class="flex items-center gap-1">
-            <%= link_to document_path(doc), class: "rounded p-1.5 text-muted-foreground hover:bg-surface-hover hover:text-card-foreground transition-colors" do %>
-              <%= icon("eye", classes: "h-3.5 w-3.5") %>
+          <div class="flex flex-wrap gap-1 mb-2">
+            <% techs = doc.technologies.is_a?(Array) ? doc.technologies : [] %>
+            <% techs.first(3).each do |t| %>
+              <span class="rounded bg-secondary px-1.5 py-0.5 text-[10px] font-mono text-secondary-foreground"><%= t %></span>
             <% end %>
-            <%= button_to document_path(doc), method: :delete, class: "rounded p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors", data: { turbo_confirm: "¿Estás seguro de que deseas eliminar '#{doc.title}'?" } do %>
-              <%= icon("trash2", classes: "h-3.5 w-3.5") %>
+          </div>
+          <div class="flex items-center justify-between text-xs text-muted-foreground">
+            <span class="font-mono"><%= doc.chunks_count %> chunks</span>
+            <span class="font-mono"><%= doc.budget ? "#{number_with_delimiter(doc.budget.to_i)}€" : "—" %></span>
+          </div>
+          <div class="mt-3 flex items-center gap-2">
+            <%= link_to document_path(doc), class: "inline-flex items-center gap-1 rounded px-2 py-1 text-xs text-muted-foreground hover:bg-surface-hover hover:text-card-foreground transition-colors", aria: { label: "Ver #{doc.title}" } do %>
+              <%= icon("eye", classes: "h-3.5 w-3.5") %> Ver
+            <% end %>
+            <%= button_to document_path(doc), method: :delete, class: "inline-flex items-center gap-1 rounded px-2 py-1 text-xs text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors", data: { turbo_confirm: "¿Estás seguro de que deseas eliminar '#{doc.title}'?" }, aria: { label: "Eliminar #{doc.title}" } do %>
+              <%= icon("trash2", classes: "h-3.5 w-3.5") %> Eliminar
             <% end %>
           </div>
         </div>
       <% end %>
     </div>
-  </div>
+
+    <%# Desktop table %>
+    <div class="rounded-xl border border-border bg-card overflow-hidden hidden sm:block">
+      <%# Header %>
+      <div class="grid grid-cols-[1fr_100px_80px_100px_120px_80px] gap-2 border-b border-border bg-surface px-5 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+        <span>Proyecto</span>
+        <span>Estado</span>
+        <span>Chunks</span>
+        <span class="text-right">Presupuesto</span>
+        <span>Duración</span>
+        <span></span>
+      </div>
+
+      <%# Rows %>
+      <div class="divide-y divide-border">
+        <% @documents.each do |doc| %>
+          <div class="grid grid-cols-[1fr_100px_80px_100px_120px_80px] gap-2 items-center px-5 py-3 hover:bg-surface transition-colors">
+            <div class="min-w-0">
+              <p class="text-sm text-card-foreground truncate"><%= doc.title %></p>
+              <div class="flex flex-wrap gap-1 mt-1">
+                <% techs = doc.technologies.is_a?(Array) ? doc.technologies : [] %>
+                <% techs.first(3).each do |t| %>
+                  <span class="rounded bg-secondary px-1.5 py-0.5 text-[10px] font-mono text-secondary-foreground"><%= t %></span>
+                <% end %>
+                <% if techs.length > 3 %>
+                  <span class="text-[10px] text-muted-foreground">+<%= techs.length - 3 %></span>
+                <% end %>
+              </div>
+            </div>
+            <div>
+              <%= render "shared/status_badge", status: doc.status %>
+            </div>
+            <span class="text-sm font-mono text-muted-foreground"><%= doc.chunks_count %></span>
+            <span class="text-sm font-mono text-card-foreground text-right"><%= doc.budget ? "#{number_with_delimiter(doc.budget.to_i)}€" : "—" %></span>
+            <span class="text-xs text-muted-foreground"><%= doc.duration || "—" %></span>
+            <div class="flex items-center gap-1">
+              <%= link_to document_path(doc), class: "rounded p-1.5 text-muted-foreground hover:bg-surface-hover hover:text-card-foreground transition-colors", aria: { label: "Ver #{doc.title}" } do %>
+                <%= icon("eye", classes: "h-3.5 w-3.5") %>
+              <% end %>
+              <%= button_to document_path(doc), method: :delete, class: "rounded p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors", data: { turbo_confirm: "¿Estás seguro de que deseas eliminar '#{doc.title}'?" }, aria: { label: "Eliminar #{doc.title}" } do %>
+                <%= icon("trash2", classes: "h-3.5 w-3.5") %>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% else %>
+    <%# Empty state %>
+    <div class="rounded-xl border border-dashed border-border bg-card p-10 text-center">
+      <%= icon("file_text", classes: "h-10 w-10 text-muted-foreground mx-auto mb-3") %>
+      <p class="text-sm font-medium text-card-foreground mb-1">No hay estimaciones todavía</p>
+      <p class="text-xs text-muted-foreground mb-4">Ingesta tu primer presupuesto para comenzar</p>
+      <%= link_to ingest_path, class: "inline-flex items-center justify-center rounded-md bg-primary text-primary-foreground text-sm font-medium h-9 px-4 hover:bg-primary/90 transition-colors" do %>
+        <%= icon("upload", classes: "mr-2 h-4 w-4") %> Ingestar primer documento
+      <% end %>
+    </div>
+  <% end %>
 
   <% if @pagy.pages > 1 %>
     <nav class="mt-6 flex items-center justify-center gap-1" aria-label="Paginación">

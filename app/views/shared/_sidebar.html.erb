@@ -1,8 +1,10 @@
 <aside
-  data-controller="sidebar"
-  data-sidebar-collapsed-class="w-16"
-  data-sidebar-expanded-class="w-60"
-  class="flex h-screen flex-col border-r border-border bg-card transition-all duration-300 w-60"
+  data-sidebar-target="sidebar"
+  data-sidebar-collapsed-class="md:w-16"
+  data-sidebar-expanded-class="md:w-60"
+  role="navigation"
+  aria-label="Navegación principal"
+  class="fixed inset-y-0 left-0 z-40 flex h-screen w-60 -translate-x-full flex-col border-r border-border bg-card transition-all duration-300 md:static md:z-auto md:translate-x-0 md:w-60 print:hidden"
 >
   <%# Logo section %>
   <div class="flex items-center gap-2 border-b border-border px-4 py-4">
@@ -36,17 +38,20 @@
           "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors text-muted-foreground hover:bg-surface-hover hover:text-foreground"
         end
       %>
-      <%= link_to item[:path], class: link_classes do %>
+      <%= link_to item[:path], class: link_classes, "aria-current": (is_active ? "page" : nil), data: { action: "click->sidebar#closeMobile" } do %>
         <%= icon(item[:icon], classes: "h-4 w-4 shrink-0") %>
         <span data-sidebar-target="label"><%= item[:label] %></span>
       <% end %>
     <% end %>
   </nav>
 
-  <%# Collapse toggle %>
-  <div class="border-t border-border p-2">
+  <%# Collapse toggle (desktop only) %>
+  <div class="border-t border-border p-2 hidden md:block">
     <button
       data-action="sidebar#toggle"
+      aria-label="Colapsar menú lateral"
+      aria-expanded="true"
+      data-sidebar-target="toggleBtn"
       class="flex w-full items-center justify-center rounded-lg p-2 text-muted-foreground hover:bg-surface-hover hover:text-foreground transition-colors"
     >
       <span data-sidebar-target="collapseIcon">

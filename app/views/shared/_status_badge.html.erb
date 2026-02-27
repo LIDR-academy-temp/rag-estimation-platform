@@ -14,6 +14,6 @@
   end
 %>
 <span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium <%= badge_styles[:bg] %> <%= badge_styles[:text] %>">
-  <span class="h-1.5 w-1.5 rounded-full <%= badge_styles[:dot] %>"></span>
+  <span class="h-1.5 w-1.5 rounded-full <%= badge_styles[:dot] %>" aria-hidden="true"></span>
   <%= status.to_s.capitalize %>
 </span>

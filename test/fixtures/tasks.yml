@@ -1,0 +1,26 @@
+login_task:
+  functional_block: auth_block
+  name: Login con JWT
+  hours_optimistic: 8.00
+  hours_expected: 16.00
+  hours_pessimistic: 24.00
+  rate: 130.00
+  position: 0
+
+oauth_task:
+  functional_block: auth_block
+  name: OAuth Integration
+  hours_optimistic: 16.00
+  hours_expected: 24.00
+  hours_pessimistic: 40.00
+  rate:
+  position: 1
+
+ui_task:
+  functional_block: frontend_block
+  name: Componentes UI
+  hours_optimistic: 20.00
+  hours_expected: 30.00
+  hours_pessimistic: 45.00
+  rate: 100.00
+  position: 0

@@ -19,7 +19,9 @@
       <%= icon("file_json", classes: "h-3 w-3") %> O pega el JSON directamente:
     </div>
 
+    <label for="raw_json_input" class="sr-only">Contenido JSON del presupuesto</label>
     <textarea
+      id="raw_json_input"
       name="raw_json"
       data-file-upload-target="textarea"
       placeholder='{"quote":{"project":{"title":"Mi Proyecto","subtitle":"Descripción del proyecto"},"scope_blocks":[...],"items":[...]}}'
@@ -37,13 +39,21 @@
   <%= turbo_frame_tag "ingestion_history" do %>
     <div class="rounded-xl border border-border bg-card">
       <div class="border-b border-border px-5 py-3">
-        <h3 class="text-sm font-semibold text-card-foreground">Historial de ingestas</h3>
+        <h2 class="text-sm font-semibold text-card-foreground">Historial de ingestas</h2>
       </div>
-      <div class="divide-y divide-border">
-        <% @documents.each do |doc| %>
-          <%= render "ingest/document_row", document: doc %>
-        <% end %>
-      </div>
+      <% if @documents.any? %>
+        <div class="divide-y divide-border">
+          <% @documents.each do |doc| %>
+            <%= render "ingest/document_row", document: doc %>
+          <% end %>
+        </div>
+      <% else %>
+        <div class="p-8 text-center">
+          <%= icon("upload", classes: "h-8 w-8 text-muted-foreground mx-auto mb-2") %>
+          <p class="text-sm text-muted-foreground">No hay ingestas todavía</p>
+          <p class="text-xs text-muted-foreground mt-1">Sube tu primer presupuesto JSON para comenzar</p>
+        </div>
+      <% end %>
     </div>
   <% end %>
 </div>

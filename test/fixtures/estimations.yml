@@ -1,0 +1,29 @@
+draft_estimation:
+  user: antonio
+  title: Estimación Borrador
+  status: draft
+  global_rate: 150.00
+  currency: EUR
+
+completed_estimation:
+  user: antonio
+  title: Estimación Completa
+  status: completed
+  global_rate: 120.00
+  currency: EUR
+  confidence_score: 0.85
+  confidence_level: high
+  technologies: <%= ["Ruby", "Rails"].to_json %>
+  total_hours_optimistic: 100.00
+  total_hours_expected: 150.00
+  total_hours_pessimistic: 200.00
+  total_cost_optimistic: 12000.00
+  total_cost_expected: 18000.00
+  total_cost_pessimistic: 24000.00
+
+other_user_estimation:
+  user: maria
+  title: Estimación de María
+  status: completed
+  global_rate: 100.00
+  currency: USD

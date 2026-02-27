@@ -101,3 +101,65 @@
   .stagger-children > *:nth-child(4) { animation-delay: 0.2s; }
   .stagger-children > *:nth-child(5) { animation-delay: 0.25s; }
 }
+
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+    font-size: 12pt;
+  }
+
+  aside, nav, .print\:hidden,
+  button[data-action*="sidebar"],
+  button[data-action*="collapsible"],
+  [data-controller="auto-dismiss"] {
+    display: none !important;
+  }
+
+  .print\:block {
+    display: block !important;
+  }
+
+  main {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+  }
+
+  .rounded-xl, .rounded-lg, .rounded-md {
+    border-radius: 0 !important;
+  }
+
+  .border-border {
+    border-color: #ccc !important;
+  }
+
+  .bg-card, .bg-surface, .bg-surface\/50 {
+    background: white !important;
+  }
+
+  .glow-sm, .glow-md {
+    box-shadow: none !important;
+  }
+
+  .shadow, .shadow-sm, .shadow-md, .shadow-lg {
+    box-shadow: none !important;
+  }
+
+  [data-collapsible-target="body"] {
+    display: block !important;
+  }
+
+  .text-card-foreground, .text-foreground {
+    color: black !important;
+  }
+
+  .text-muted-foreground {
+    color: #666 !important;
+  }
+
+  a {
+    color: black !important;
+    text-decoration: none !important;
+  }
+}

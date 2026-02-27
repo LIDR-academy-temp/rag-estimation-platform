@@ -10,6 +10,7 @@ export default class extends Controller {
     const body = block.querySelector("[data-collapsible-target='body']")
     const iconExpanded = block.querySelector("[data-collapsible-target='iconExpanded']")
     const iconCollapsed = block.querySelector("[data-collapsible-target='iconCollapsed']")
+    const toggleBtn = event.target.closest("button")
 
     if (body) {
       const isHidden = body.style.display === "none"
@@ -17,6 +18,10 @@ export default class extends Controller {
 
       if (iconExpanded) iconExpanded.classList.toggle("hidden", !isHidden)
       if (iconCollapsed) iconCollapsed.classList.toggle("hidden", isHidden)
+
+      if (toggleBtn) {
+        toggleBtn.setAttribute("aria-expanded", isHidden ? "true" : "false")
+      }
     }
   }
 }

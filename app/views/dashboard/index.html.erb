@@ -1,5 +1,15 @@
 <%= render "shared/page_header", title: "Dashboard", description: "Resumen del estado del servicio RAG de estimaciones" %>
 
+<% if @health_status&.dig("status") == "unavailable" %>
+  <div class="mb-6 rounded-xl border border-destructive/30 bg-destructive/10 p-4 flex items-center gap-3" role="alert">
+    <%= icon("alert_triangle", classes: "h-5 w-5 text-destructive shrink-0") %>
+    <div>
+      <p class="text-sm font-medium text-destructive">Servicio RAG no disponible</p>
+      <p class="text-xs text-destructive/80">Las funciones de búsqueda, ingesta y estimación pueden no estar operativas.</p>
+    </div>
+  </div>
+<% end %>
+
 <%# Stats %>
 <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 stagger-children">
   <%= render "shared/stat_card",
@@ -31,7 +41,7 @@
     <div class="rounded-xl border border-border bg-card p-5">
       <div class="flex items-center gap-2 mb-4">
         <%= icon("heart", classes: "h-4 w-4 text-success") %>
-        <h3 class="text-sm font-semibold text-card-foreground">Estado del sistema</h3>
+        <h2 class="text-sm font-semibold text-card-foreground">Estado del sistema</h2>
         <%= render "shared/status_badge", status: @health_status&.dig("status") || "unavailable" %>
       </div>
       <div class="space-y-3">
@@ -44,7 +54,7 @@
             %>
             <div class="flex items-center justify-between rounded-lg bg-surface p-3">
               <div class="flex items-center gap-2">
-                <span class="h-2 w-2 rounded-full <%= dot_color %>"></span>
+                <span class="h-2 w-2 rounded-full <%= dot_color %>" aria-hidden="true"></span>
                 <span class="text-sm text-card-foreground"><%= name.humanize %></span>
               </div>
               <% if dep_latency %>
@@ -55,7 +65,7 @@
         <% else %>
           <div class="flex items-center justify-between rounded-lg bg-surface p-3">
             <div class="flex items-center gap-2">
-              <span class="h-2 w-2 rounded-full bg-muted-foreground"></span>
+              <span class="h-2 w-2 rounded-full bg-muted-foreground" aria-hidden="true"></span>
               <span class="text-sm text-muted-foreground">Servicio RAG - No disponible</span>
             </div>
           </div>
@@ -69,12 +79,12 @@
     <div class="rounded-xl border border-border bg-card p-5">
       <div class="flex items-center gap-2 mb-4">
         <%= icon("database", classes: "h-4 w-4 text-primary") %>
-        <h3 class="text-sm font-semibold text-card-foreground">Distribución de chunks</h3>
+        <h2 class="text-sm font-semibold text-card-foreground">Distribución de chunks</h2>
       </div>
 
       <% total = @chunk_distribution.sum { |c| c[:count] } %>
       <%# Visual bar %>
-      <div class="flex h-3 overflow-hidden rounded-full mb-4">
+      <div class="flex h-3 overflow-hidden rounded-full mb-4" role="img" aria-label="Distribución de chunks por tipo">
         <% @chunk_distribution.each do |c| %>
           <div class="<%= c[:color] %>" style="width: <%= total > 0 ? (c[:count].to_f / total * 100).round(1) : 0 %>%"></div>
         <% end %>
@@ -84,7 +94,7 @@
         <% @chunk_distribution.each do |c| %>
           <div class="flex items-center justify-between text-sm">
             <div class="flex items-center gap-2">
-              <span class="h-2 w-2 rounded-full <%= c[:color] %>"></span>
+              <span class="h-2 w-2 rounded-full <%= c[:color] %>" aria-hidden="true"></span>
               <span class="text-muted-foreground font-mono text-xs"><%= c[:type] %></span>
             </div>
             <span class="font-mono text-xs text-card-foreground"><%= number_with_delimiter(c[:count]) %></span>
@@ -99,25 +109,31 @@
     <div class="rounded-xl border border-border bg-card p-5">
       <div class="flex items-center gap-2 mb-4">
         <%= icon("zap", classes: "h-4 w-4 text-warning") %>
-        <h3 class="text-sm font-semibold text-card-foreground">Ingestas recientes</h3>
+        <h2 class="text-sm font-semibold text-card-foreground">Ingestas recientes</h2>
       </div>
       <div class="space-y-2">
-        <% @recent_documents.each do |doc| %>
-          <div class="flex items-center justify-between rounded-lg bg-surface p-3">
-            <div class="min-w-0 flex-1">
-              <p class="text-sm text-card-foreground truncate"><%= doc.title %></p>
-              <p class="text-[11px] text-muted-foreground">
-                <% if doc.status == "completed" %>
-                  <%= doc.chunks_count %> chunks
-                <% elsif doc.status == "processing" %>
-                  Procesando...
-                <% else %>
-                  Error
-                <% end %>
-                &middot; <%= time_ago_in_words(doc.created_at) %>
-              </p>
+        <% if @recent_documents.any? %>
+          <% @recent_documents.each do |doc| %>
+            <div class="flex items-center justify-between rounded-lg bg-surface p-3">
+              <div class="min-w-0 flex-1">
+                <p class="text-sm text-card-foreground truncate"><%= doc.title %></p>
+                <p class="text-[11px] text-muted-foreground">
+                  <% if doc.status == "completed" %>
+                    <%= doc.chunks_count %> chunks
+                  <% elsif doc.status == "processing" %>
+                    Procesando...
+                  <% else %>
+                    Error
+                  <% end %>
+                  &middot; <%= time_ago_in_words(doc.created_at) %>
+                </p>
+              </div>
+              <%= render "shared/status_badge", status: doc.status %>
             </div>
-            <%= render "shared/status_badge", status: doc.status %>
+          <% end %>
+        <% else %>
+          <div class="rounded-lg bg-surface p-4 text-center">
+            <p class="text-sm text-muted-foreground">No hay ingestas recientes</p>
           </div>
         <% end %>
       </div>

@@ -1,0 +1,35 @@
+completed_doc:
+  user: antonio
+  title: Proyecto E-commerce
+  status: completed
+  external_document_id: <%= SecureRandom.uuid %>
+  chunks_count: 15
+  budget: 50000.00
+  currency: EUR
+  technologies: <%= ["Ruby", "Rails", "PostgreSQL"].to_json %>
+  duration: "3 meses"
+  raw_json: '{"quote":{"project":{"title":"Proyecto E-commerce"}}}'
+  ingested_at: <%= Time.current %>
+
+pending_doc:
+  user: antonio
+  title: Proyecto Mobile App
+  status: pending
+  chunks_count: 0
+  budget: 30000.00
+  currency: EUR
+  technologies: <%= ["React Native", "Node.js"].to_json %>
+
+failed_doc:
+  user: antonio
+  title: Proyecto Fallido
+  status: failed
+  chunks_count: 0
+
+other_user_doc:
+  user: maria
+  title: Proyecto de María
+  status: completed
+  external_document_id: <%= SecureRandom.uuid %>
+  chunks_count: 10
+  budget: 25000.00

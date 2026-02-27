@@ -1,0 +1,9 @@
+auth_block:
+  estimation: completed_estimation
+  name: Autenticación
+  position: 0
+
+frontend_block:
+  estimation: completed_estimation
+  name: Frontend
+  position: 1

@@ -1,10 +1,16 @@
 <% content_for :page_actions do %>
-  <%= link_to estimate_path, class: "inline-flex items-center justify-center rounded-md border border-border bg-card text-sm font-medium h-9 px-3 hover:bg-surface-hover transition-colors" do %>
+  <%= link_to estimate_path, class: "inline-flex items-center justify-center rounded-md border border-border bg-card text-sm font-medium h-9 px-3 hover:bg-surface-hover transition-colors print:hidden" do %>
     <%= icon("arrow_left", classes: "mr-2 h-4 w-4") %> Volver
   <% end %>
 <% end %>
 
 <%= render "shared/page_header", title: @estimation.title, description: @estimation.description %>
+
+<%# Print header %>
+<div class="hidden print:block mb-6 border-b border-gray-300 pb-4">
+  <h1 class="text-xl font-bold"><%= @estimation.title %></h1>
+  <p class="text-sm text-gray-600">Generado el <%= @estimation.created_at.strftime("%d/%m/%Y %H:%M") %></p>
+</div>
 
 <div class="space-y-6" data-controller="estimate-type collapsible">
   <%# Meta row %>
@@ -62,10 +68,11 @@
     %>
 
     <%# Three-point estimate selector %>
-    <div class="grid grid-cols-3 gap-3">
+    <h2 class="text-sm font-semibold text-card-foreground">Estimación por puntos</h2>
+    <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
       <% estimate_types.each do |type, meta| %>
         <button
-          class="rounded-xl border p-4 text-center transition-all cursor-pointer border-border bg-card hover:border-primary/40"
+          class="rounded-xl border p-4 text-center transition-all cursor-pointer border-border bg-card hover:border-primary/40 print:border-gray-300"
           data-action="estimate-type#select"
           data-estimate-type-type-param="<%= type %>"
           data-estimate-type-target="selector"
@@ -81,11 +88,12 @@
     </div>
 
     <%# Block breakdown %>
+    <h2 class="text-sm font-semibold text-card-foreground">Desglose por bloques</h2>
     <div class="space-y-3">
       <% blocks.each do |block| %>
         <div class="rounded-xl border border-border bg-card overflow-hidden" data-collapsible-target="block">
           <div class="flex items-center gap-2 px-5 py-3.5 bg-surface/50">
-            <button class="text-muted-foreground hover:text-card-foreground transition-colors" data-action="collapsible#toggle">
+            <button class="text-muted-foreground hover:text-card-foreground transition-colors" data-action="collapsible#toggle" aria-expanded="true" aria-controls="block-<%= block.id %>">
               <span data-collapsible-target="iconExpanded"><%= icon("chevron_down", classes: "h-4 w-4") %></span>
               <span data-collapsible-target="iconCollapsed" class="hidden"><%= icon("chevron_right", classes: "h-4 w-4") %></span>
             </button>
@@ -98,7 +106,7 @@
             <% end %>
           </div>
 
-          <div class="px-5 py-3 space-y-1.5" data-collapsible-target="body">
+          <div id="block-<%= block.id %>" class="px-5 py-3 space-y-1.5" data-collapsible-target="body">
             <% block.tasks.each do |task| %>
               <div class="flex items-center justify-between rounded-lg bg-surface px-4 py-2.5">
                 <span class="text-sm text-card-foreground flex-1"><%= task.name %></span>
@@ -106,10 +114,11 @@
                   <span class="text-xs font-mono text-muted-foreground"><%= task.effective_rate.to_i %>€/h</span>
                   <% estimate_types.each_key do |type| %>
                     <% task_hours = task.send("hours_#{type}") %>
+                    <% pct = (task_hours.to_f / max_hours * 100).round(1) %>
                     <span class="flex items-center gap-3" data-estimate-type-target="value" data-estimate-type="<%= type %>" style="<%= type != :expected ? 'display:none' : '' %>">
                       <span class="w-20">
-                        <div class="h-1.5 rounded-full bg-muted overflow-hidden">
-                          <div class="h-full rounded-full bg-primary" style="width: <%= (task_hours.to_f / max_hours * 100).round(1) %>%"></div>
+                        <div class="h-1.5 rounded-full bg-muted overflow-hidden" role="progressbar" aria-valuenow="<%= pct %>" aria-valuemin="0" aria-valuemax="100" aria-label="<%= task.name %> - <%= task_hours.to_i %> horas">
+                          <div class="h-full rounded-full bg-primary" style="width: <%= pct %>%"></div>
                         </div>
                       </span>
                       <span class="text-sm font-mono font-medium text-card-foreground min-w-[3rem] text-right"><%= task_hours.to_i %>h</span>
@@ -127,7 +136,7 @@
   <%# References %>
   <% if @estimation.references.any? %>
     <div class="rounded-xl border border-border bg-card p-5">
-      <h3 class="text-sm font-semibold text-card-foreground mb-4">Referencias históricas utilizadas</h3>
+      <h2 class="text-sm font-semibold text-card-foreground mb-4">Referencias históricas utilizadas</h2>
       <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <% @estimation.references.by_similarity.each do |ref| %>
           <div class="rounded-lg border border-border bg-surface p-4">

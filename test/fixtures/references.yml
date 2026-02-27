@@ -1,0 +1,21 @@
+high_similarity_ref:
+  estimation: completed_estimation
+  title: Proyecto Similar A
+  chunk_id: <%= SecureRandom.uuid %>
+  chunk_type: scope_block
+  similarity_score: 0.92
+  content_preview: "Módulo de autenticación con OAuth2"
+  cost: 45000.00
+  currency: EUR
+  technologies: <%= ["Ruby", "Rails"].to_json %>
+
+low_similarity_ref:
+  estimation: completed_estimation
+  title: Proyecto Similar B
+  chunk_id: <%= SecureRandom.uuid %>
+  chunk_type: line_item
+  similarity_score: 0.67
+  content_preview: "Sistema de pagos con Stripe"
+  cost: 30000.00
+  currency: EUR
+  technologies: <%= ["Node.js", "React"].to_json %>

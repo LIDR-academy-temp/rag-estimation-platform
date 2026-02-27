@@ -23,11 +23,31 @@
   </head>
 
   <body>
-    <div class="flex min-h-screen w-full">
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:top-2 focus:left-2 focus:rounded-md focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground focus:text-sm focus:font-medium">
+      Saltar al contenido principal
+    </a>
+
+    <div class="flex min-h-screen w-full" data-controller="sidebar">
+      <%# Mobile hamburger button %>
+      <button
+        data-action="sidebar#toggleMobile"
+        aria-label="Abrir menú de navegación"
+        class="fixed top-4 left-4 z-50 flex h-10 w-10 items-center justify-center rounded-lg bg-card border border-border text-foreground md:hidden print:hidden"
+      >
+        <%= icon("menu", classes: "h-5 w-5") %>
+      </button>
+
+      <%# Mobile overlay backdrop %>
+      <div
+        data-sidebar-target="overlay"
+        data-action="click->sidebar#closeMobile"
+        class="fixed inset-0 z-30 bg-black/50 hidden md:hidden print:hidden"
+      ></div>
+
       <%= render "shared/sidebar" %>
 
-      <main class="flex-1 overflow-auto">
-        <div class="mx-auto max-w-7xl p-6 lg:p-8">
+      <main id="main-content" class="flex-1 overflow-auto">
+        <div class="mx-auto max-w-7xl p-4 pt-16 md:p-6 md:pt-6 lg:p-8">
           <%= render "shared/flash" %>
 
           <%= yield %>
