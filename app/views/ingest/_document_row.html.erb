@@ -1,0 +1,14 @@
+<div id="document_<%= document.id %>" class="flex items-center justify-between px-5 py-3 hover:bg-surface transition-colors animate-fade-in-up">
+  <div class="min-w-0 flex-1">
+    <p class="text-sm text-card-foreground truncate"><%= document.title %></p>
+    <div class="flex items-center gap-2 mt-0.5">
+      <span class="text-[11px] font-mono text-muted-foreground"><%= document.created_at.strftime("%Y-%m-%d") %></span>
+      <% if document.status == "completed" %>
+        <span class="text-[11px] text-muted-foreground">
+          <%= document.chunks_count %> chunks
+        </span>
+      <% end %>
+    </div>
+  </div>
+  <%= render "shared/status_badge", status: document.status %>
+</div>

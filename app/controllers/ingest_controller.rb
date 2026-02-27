@@ -25,12 +25,16 @@ class IngestController < ApplicationController
     end
     technologies = technologies.uniq
 
-    @document = current_user.documents.create!(
+    @document = current_user.documents.create(
       title: title,
       raw_json: raw,
       technologies: technologies,
       status: "pending"
     )
+
+    unless @document.persisted?
+      redirect_to ingest_path, alert: "No se pudo guardar el documento." and return
+    end
 
     begin
       rag = RagServiceClient.new

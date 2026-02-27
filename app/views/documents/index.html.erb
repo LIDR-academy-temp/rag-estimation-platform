@@ -9,7 +9,7 @@
 
 <%# Search %>
 <div class="mb-4">
-  <%= form_with url: documents_path, method: :get, local: true, class: "relative max-w-sm" do %>
+  <%= form_with url: documents_path, method: :get, data: { turbo_frame: "documents_table" }, class: "relative max-w-sm" do %>
     <div class="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
       <%= icon("search", classes: "h-4 w-4") %>
     </div>
@@ -23,83 +23,85 @@
   <% end %>
 </div>
 
-<%# Table %>
-<div class="rounded-xl border border-border bg-card overflow-hidden">
-  <%# Header %>
-  <div class="grid grid-cols-[1fr_100px_80px_100px_120px_80px] gap-2 border-b border-border bg-surface px-5 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-    <span>Proyecto</span>
-    <span>Estado</span>
-    <span>Chunks</span>
-    <span class="text-right">Presupuesto</span>
-    <span>Duración</span>
-    <span></span>
-  </div>
+<%= turbo_frame_tag "documents_table" do %>
+  <%# Table %>
+  <div class="rounded-xl border border-border bg-card overflow-hidden">
+    <%# Header %>
+    <div class="grid grid-cols-[1fr_100px_80px_100px_120px_80px] gap-2 border-b border-border bg-surface px-5 py-2.5 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+      <span>Proyecto</span>
+      <span>Estado</span>
+      <span>Chunks</span>
+      <span class="text-right">Presupuesto</span>
+      <span>Duración</span>
+      <span></span>
+    </div>
 
-  <%# Rows %>
-  <div class="divide-y divide-border">
-    <% @documents.each do |doc| %>
-      <div class="grid grid-cols-[1fr_100px_80px_100px_120px_80px] gap-2 items-center px-5 py-3 hover:bg-surface transition-colors">
-        <div class="min-w-0">
-          <p class="text-sm text-card-foreground truncate"><%= doc.title %></p>
-          <div class="flex flex-wrap gap-1 mt-1">
-            <% techs = doc.technologies.is_a?(Array) ? doc.technologies : [] %>
-            <% techs.first(3).each do |t| %>
-              <span class="rounded bg-secondary px-1.5 py-0.5 text-[10px] font-mono text-secondary-foreground"><%= t %></span>
+    <%# Rows %>
+    <div class="divide-y divide-border">
+      <% @documents.each do |doc| %>
+        <div class="grid grid-cols-[1fr_100px_80px_100px_120px_80px] gap-2 items-center px-5 py-3 hover:bg-surface transition-colors">
+          <div class="min-w-0">
+            <p class="text-sm text-card-foreground truncate"><%= doc.title %></p>
+            <div class="flex flex-wrap gap-1 mt-1">
+              <% techs = doc.technologies.is_a?(Array) ? doc.technologies : [] %>
+              <% techs.first(3).each do |t| %>
+                <span class="rounded bg-secondary px-1.5 py-0.5 text-[10px] font-mono text-secondary-foreground"><%= t %></span>
+              <% end %>
+              <% if techs.length > 3 %>
+                <span class="text-[10px] text-muted-foreground">+<%= techs.length - 3 %></span>
+              <% end %>
+            </div>
+          </div>
+          <div>
+            <%= render "shared/status_badge", status: doc.status %>
+          </div>
+          <span class="text-sm font-mono text-muted-foreground"><%= doc.chunks_count %></span>
+          <span class="text-sm font-mono text-card-foreground text-right"><%= doc.budget ? "#{number_with_delimiter(doc.budget.to_i)}€" : "—" %></span>
+          <span class="text-xs text-muted-foreground"><%= doc.duration || "—" %></span>
+          <div class="flex items-center gap-1">
+            <%= link_to document_path(doc), class: "rounded p-1.5 text-muted-foreground hover:bg-surface-hover hover:text-card-foreground transition-colors" do %>
+              <%= icon("eye", classes: "h-3.5 w-3.5") %>
             <% end %>
-            <% if techs.length > 3 %>
-              <span class="text-[10px] text-muted-foreground">+<%= techs.length - 3 %></span>
+            <%= button_to document_path(doc), method: :delete, class: "rounded p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors", data: { turbo_confirm: "¿Estás seguro de que deseas eliminar '#{doc.title}'?" } do %>
+              <%= icon("trash2", classes: "h-3.5 w-3.5") %>
             <% end %>
           </div>
         </div>
-        <div>
-          <%= render "shared/status_badge", status: doc.status %>
-        </div>
-        <span class="text-sm font-mono text-muted-foreground"><%= doc.chunks_count %></span>
-        <span class="text-sm font-mono text-card-foreground text-right"><%= doc.budget ? "#{number_with_delimiter(doc.budget.to_i)}€" : "—" %></span>
-        <span class="text-xs text-muted-foreground"><%= doc.duration || "—" %></span>
-        <div class="flex items-center gap-1">
-          <%= link_to document_path(doc), class: "rounded p-1.5 text-muted-foreground hover:bg-surface-hover hover:text-card-foreground transition-colors" do %>
-            <%= icon("eye", classes: "h-3.5 w-3.5") %>
-          <% end %>
-          <%= button_to document_path(doc), method: :delete, class: "rounded p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors", data: { turbo_confirm: "¿Estás seguro de que deseas eliminar '#{doc.title}'?" } do %>
-            <%= icon("trash2", classes: "h-3.5 w-3.5") %>
-          <% end %>
-        </div>
-      </div>
-    <% end %>
+      <% end %>
+    </div>
   </div>
-</div>
 
-<% if @pagy.pages > 1 %>
-  <nav class="mt-6 flex items-center justify-center gap-1" aria-label="Paginación">
-    <% if @pagy.prev %>
-      <%= link_to documents_path(page: @pagy.prev, q: params[:q]), class: "inline-flex h-9 w-9 items-center justify-center rounded-md border border-border bg-card text-sm hover:bg-surface-hover transition-colors" do %>
-        <%= icon("arrow_left", classes: "h-4 w-4") %>
-      <% end %>
-    <% else %>
-      <span class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-border bg-card text-sm opacity-50 cursor-not-allowed">
-        <%= icon("arrow_left", classes: "h-4 w-4") %>
-      </span>
-    <% end %>
-
-    <% @pagy.series.each do |item| %>
-      <% if item == :gap %>
-        <span class="inline-flex h-9 w-9 items-center justify-center text-sm text-muted-foreground">&hellip;</span>
-      <% elsif item.is_a?(String) %>
-        <span class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-primary text-primary-foreground text-sm font-medium"><%= item %></span>
+  <% if @pagy.pages > 1 %>
+    <nav class="mt-6 flex items-center justify-center gap-1" aria-label="Paginación">
+      <% if @pagy.prev %>
+        <%= link_to documents_path(page: @pagy.prev, q: params[:q]), data: { turbo_frame: "documents_table" }, class: "inline-flex h-9 w-9 items-center justify-center rounded-md border border-border bg-card text-sm hover:bg-surface-hover transition-colors" do %>
+          <%= icon("arrow_left", classes: "h-4 w-4") %>
+        <% end %>
       <% else %>
-        <%= link_to item, documents_path(page: item, q: params[:q]), class: "inline-flex h-9 w-9 items-center justify-center rounded-md border border-border bg-card text-sm hover:bg-surface-hover transition-colors" %>
+        <span class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-border bg-card text-sm opacity-50 cursor-not-allowed">
+          <%= icon("arrow_left", classes: "h-4 w-4") %>
+        </span>
       <% end %>
-    <% end %>
 
-    <% if @pagy.next %>
-      <%= link_to documents_path(page: @pagy.next, q: params[:q]), class: "inline-flex h-9 w-9 items-center justify-center rounded-md border border-border bg-card text-sm hover:bg-surface-hover transition-colors" do %>
-        <%= icon("arrow_right", classes: "h-4 w-4") %>
+      <% @pagy.series.each do |item| %>
+        <% if item == :gap %>
+          <span class="inline-flex h-9 w-9 items-center justify-center text-sm text-muted-foreground">&hellip;</span>
+        <% elsif item.is_a?(String) %>
+          <span class="inline-flex h-9 w-9 items-center justify-center rounded-md bg-primary text-primary-foreground text-sm font-medium"><%= item %></span>
+        <% else %>
+          <%= link_to item, documents_path(page: item, q: params[:q]), data: { turbo_frame: "documents_table" }, class: "inline-flex h-9 w-9 items-center justify-center rounded-md border border-border bg-card text-sm hover:bg-surface-hover transition-colors" %>
+        <% end %>
       <% end %>
-    <% else %>
-      <span class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-border bg-card text-sm opacity-50 cursor-not-allowed">
-        <%= icon("arrow_right", classes: "h-4 w-4") %>
-      </span>
-    <% end %>
-  </nav>
+
+      <% if @pagy.next %>
+        <%= link_to documents_path(page: @pagy.next, q: params[:q]), data: { turbo_frame: "documents_table" }, class: "inline-flex h-9 w-9 items-center justify-center rounded-md border border-border bg-card text-sm hover:bg-surface-hover transition-colors" do %>
+          <%= icon("arrow_right", classes: "h-4 w-4") %>
+        <% end %>
+      <% else %>
+        <span class="inline-flex h-9 w-9 items-center justify-center rounded-md border border-border bg-card text-sm opacity-50 cursor-not-allowed">
+          <%= icon("arrow_right", classes: "h-4 w-4") %>
+        </span>
+      <% end %>
+    </nav>
+  <% end %>
 <% end %>

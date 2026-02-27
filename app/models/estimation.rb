@@ -6,6 +6,9 @@ class Estimation < ApplicationRecord
 
   validates :title, presence: true
   validates :status, inclusion: { in: %w[draft processing completed failed] }
+  validates :global_rate, numericality: { greater_than: 0 }, allow_nil: true
+  validates :currency, inclusion: { in: %w[EUR USD GBP] }, allow_nil: true
+  validates :confidence_score, numericality: { in: 0..1 }, allow_nil: true
 
   accepts_nested_attributes_for :functional_blocks, allow_destroy: true
 

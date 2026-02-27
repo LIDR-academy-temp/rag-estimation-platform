@@ -2,6 +2,6 @@ class ChunksBreakdown < ApplicationRecord
   belongs_to :document
 
   def total
-    project_overview + scope_block + line_item + phase + team_conditions
+    (project_overview || 0) + (scope_block || 0) + (line_item || 0) + (phase || 0) + (team_conditions || 0)
   end
 end

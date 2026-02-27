@@ -1,7 +1,7 @@
 <%= render "shared/page_header", title: "Dashboard", description: "Resumen del estado del servicio RAG de estimaciones" %>
 
 <%# Stats %>
-<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 stagger-children">
   <%= render "shared/stat_card",
     title: "Documentos",
     value: @documents_count,
@@ -25,96 +25,102 @@
     variant: "success" %>
 </div>
 
-<div class="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
+<div class="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3 stagger-children">
   <%# Health %>
-  <div class="rounded-xl border border-border bg-card p-5">
-    <div class="flex items-center gap-2 mb-4">
-      <%= icon("heart", classes: "h-4 w-4 text-success") %>
-      <h3 class="text-sm font-semibold text-card-foreground">Estado del sistema</h3>
-      <%= render "shared/status_badge", status: @health_status&.dig("status") || "unavailable" %>
-    </div>
-    <div class="space-y-3">
-      <% if @health_status&.dig("dependencies").present? %>
-        <% @health_status["dependencies"].each do |name, info| %>
-          <%
-            dep_status = info.is_a?(Hash) ? info["status"] : info.to_s
-            dep_latency = info.is_a?(Hash) ? info["latency_ms"] : nil
-            dot_color = dep_status == "healthy" ? "bg-success" : "bg-destructive"
-          %>
+  <%= turbo_frame_tag "dashboard_health" do %>
+    <div class="rounded-xl border border-border bg-card p-5">
+      <div class="flex items-center gap-2 mb-4">
+        <%= icon("heart", classes: "h-4 w-4 text-success") %>
+        <h3 class="text-sm font-semibold text-card-foreground">Estado del sistema</h3>
+        <%= render "shared/status_badge", status: @health_status&.dig("status") || "unavailable" %>
+      </div>
+      <div class="space-y-3">
+        <% if @health_status&.dig("dependencies").present? %>
+          <% @health_status["dependencies"].each do |name, info| %>
+            <%
+              dep_status = info.is_a?(Hash) ? info["status"] : info.to_s
+              dep_latency = info.is_a?(Hash) ? info["latency_ms"] : nil
+              dot_color = dep_status == "healthy" ? "bg-success" : "bg-destructive"
+            %>
+            <div class="flex items-center justify-between rounded-lg bg-surface p-3">
+              <div class="flex items-center gap-2">
+                <span class="h-2 w-2 rounded-full <%= dot_color %>"></span>
+                <span class="text-sm text-card-foreground"><%= name.humanize %></span>
+              </div>
+              <% if dep_latency %>
+                <span class="text-xs font-mono text-muted-foreground"><%= dep_latency.round(1) %>ms</span>
+              <% end %>
+            </div>
+          <% end %>
+        <% else %>
           <div class="flex items-center justify-between rounded-lg bg-surface p-3">
             <div class="flex items-center gap-2">
-              <span class="h-2 w-2 rounded-full <%= dot_color %>"></span>
-              <span class="text-sm text-card-foreground"><%= name.humanize %></span>
+              <span class="h-2 w-2 rounded-full bg-muted-foreground"></span>
+              <span class="text-sm text-muted-foreground">Servicio RAG - No disponible</span>
             </div>
-            <% if dep_latency %>
-              <span class="text-xs font-mono text-muted-foreground"><%= dep_latency.round(1) %>ms</span>
-            <% end %>
           </div>
         <% end %>
-      <% else %>
-        <div class="flex items-center justify-between rounded-lg bg-surface p-3">
-          <div class="flex items-center gap-2">
-            <span class="h-2 w-2 rounded-full bg-muted-foreground"></span>
-            <span class="text-sm text-muted-foreground">Servicio RAG - No disponible</span>
-          </div>
-        </div>
-      <% end %>
+      </div>
     </div>
-  </div>
+  <% end %>
 
   <%# Chunk distribution %>
-  <div class="rounded-xl border border-border bg-card p-5">
-    <div class="flex items-center gap-2 mb-4">
-      <%= icon("database", classes: "h-4 w-4 text-primary") %>
-      <h3 class="text-sm font-semibold text-card-foreground">Distribución de chunks</h3>
-    </div>
+  <%= turbo_frame_tag "dashboard_chunks" do %>
+    <div class="rounded-xl border border-border bg-card p-5">
+      <div class="flex items-center gap-2 mb-4">
+        <%= icon("database", classes: "h-4 w-4 text-primary") %>
+        <h3 class="text-sm font-semibold text-card-foreground">Distribución de chunks</h3>
+      </div>
 
-    <% total = @chunk_distribution.sum { |c| c[:count] } %>
-    <%# Visual bar %>
-    <div class="flex h-3 overflow-hidden rounded-full mb-4">
-      <% @chunk_distribution.each do |c| %>
-        <div class="<%= c[:color] %>" style="width: <%= total > 0 ? (c[:count].to_f / total * 100).round(1) : 0 %>%"></div>
-      <% end %>
-    </div>
+      <% total = @chunk_distribution.sum { |c| c[:count] } %>
+      <%# Visual bar %>
+      <div class="flex h-3 overflow-hidden rounded-full mb-4">
+        <% @chunk_distribution.each do |c| %>
+          <div class="<%= c[:color] %>" style="width: <%= total > 0 ? (c[:count].to_f / total * 100).round(1) : 0 %>%"></div>
+        <% end %>
+      </div>
 
-    <div class="space-y-2">
-      <% @chunk_distribution.each do |c| %>
-        <div class="flex items-center justify-between text-sm">
-          <div class="flex items-center gap-2">
-            <span class="h-2 w-2 rounded-full <%= c[:color] %>"></span>
-            <span class="text-muted-foreground font-mono text-xs"><%= c[:type] %></span>
+      <div class="space-y-2">
+        <% @chunk_distribution.each do |c| %>
+          <div class="flex items-center justify-between text-sm">
+            <div class="flex items-center gap-2">
+              <span class="h-2 w-2 rounded-full <%= c[:color] %>"></span>
+              <span class="text-muted-foreground font-mono text-xs"><%= c[:type] %></span>
+            </div>
+            <span class="font-mono text-xs text-card-foreground"><%= number_with_delimiter(c[:count]) %></span>
           </div>
-          <span class="font-mono text-xs text-card-foreground"><%= number_with_delimiter(c[:count]) %></span>
-        </div>
-      <% end %>
+        <% end %>
+      </div>
     </div>
-  </div>
+  <% end %>
 
   <%# Recent ingestions %>
-  <div class="rounded-xl border border-border bg-card p-5">
-    <div class="flex items-center gap-2 mb-4">
-      <%= icon("zap", classes: "h-4 w-4 text-warning") %>
-      <h3 class="text-sm font-semibold text-card-foreground">Ingestas recientes</h3>
-    </div>
-    <div class="space-y-2">
-      <% @recent_documents.each do |doc| %>
-        <div class="flex items-center justify-between rounded-lg bg-surface p-3">
-          <div class="min-w-0 flex-1">
-            <p class="text-sm text-card-foreground truncate"><%= doc.title %></p>
-            <p class="text-[11px] text-muted-foreground">
-              <% if doc.status == "completed" %>
-                <%= doc.chunks_count %> chunks
-              <% elsif doc.status == "processing" %>
-                Procesando...
-              <% else %>
-                Error
-              <% end %>
-              &middot; <%= time_ago_in_words(doc.created_at) %>
-            </p>
+  <%= turbo_frame_tag "dashboard_recent" do %>
+    <div class="rounded-xl border border-border bg-card p-5">
+      <div class="flex items-center gap-2 mb-4">
+        <%= icon("zap", classes: "h-4 w-4 text-warning") %>
+        <h3 class="text-sm font-semibold text-card-foreground">Ingestas recientes</h3>
+      </div>
+      <div class="space-y-2">
+        <% @recent_documents.each do |doc| %>
+          <div class="flex items-center justify-between rounded-lg bg-surface p-3">
+            <div class="min-w-0 flex-1">
+              <p class="text-sm text-card-foreground truncate"><%= doc.title %></p>
+              <p class="text-[11px] text-muted-foreground">
+                <% if doc.status == "completed" %>
+                  <%= doc.chunks_count %> chunks
+                <% elsif doc.status == "processing" %>
+                  Procesando...
+                <% else %>
+                  Error
+                <% end %>
+                &middot; <%= time_ago_in_words(doc.created_at) %>
+              </p>
+            </div>
+            <%= render "shared/status_badge", status: doc.status %>
           </div>
-          <%= render "shared/status_badge", status: doc.status %>
-        </div>
-      <% end %>
+        <% end %>
+      </div>
     </div>
-  </div>
+  <% end %>
 </div>

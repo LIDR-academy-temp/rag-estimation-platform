@@ -3,6 +3,7 @@ class FunctionalBlock < ApplicationRecord
   has_many :tasks, -> { order(:position) }, dependent: :destroy
 
   validates :name, presence: true
+  validates :position, numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_nil: true
 
   accepts_nested_attributes_for :tasks, allow_destroy: true
 

@@ -1,89 +1,125 @@
 <%= render "shared/page_header", title: "Generar estimación", description: "Analiza reuniones con cliente para generar estimaciones basadas en datos históricos" %>
 
-<%# Stepper %>
-<div class="mb-8 flex items-center justify-center gap-2" data-controller="wizard">
-  <%
-    steps = [
-      { label: "Transcripciones", icon: "file_text" },
-      { label: "Bloques y tareas", icon: "brain" },
-      { label: "Estimación", icon: "clock" }
-    ]
-  %>
-  <% steps.each_with_index do |step, i| %>
-    <% if i > 0 %>
-      <div class="h-px w-8 sm:w-16 transition-colors bg-border" data-wizard-target="connector"></div>
-    <% end %>
-    <div
-      class="flex items-center gap-2 rounded-full px-4 py-2 text-xs font-medium transition-all <%= i == 0 ? 'bg-primary text-primary-foreground' : 'bg-surface text-muted-foreground' %>"
-      data-wizard-target="step"
-    >
-      <%= icon(step[:icon], classes: "h-3.5 w-3.5") %>
-      <span class="hidden sm:inline"><%= step[:label] %></span>
-    </div>
-  <% end %>
-
-  <%# Step panels %>
-  <%# Step 1: Transcriptions %>
-  <div class="hidden" data-wizard-target="panel" data-wizard-index="0" style="display: block;">
+<%# Stepper (visual only) %>
+<div class="mb-8 flex items-center justify-center gap-2">
+  <div class="flex items-center gap-2 rounded-full px-4 py-2 text-xs font-medium bg-primary text-primary-foreground">
+    <%= icon("file_text", classes: "h-3.5 w-3.5") %>
+    <span class="hidden sm:inline">Transcripciones</span>
+  </div>
+  <div class="h-px w-8 sm:w-16 bg-border"></div>
+  <div class="flex items-center gap-2 rounded-full px-4 py-2 text-xs font-medium bg-surface text-muted-foreground">
+    <%= icon("brain", classes: "h-3.5 w-3.5") %>
+    <span class="hidden sm:inline">Análisis</span>
   </div>
 </div>
 
-<%# Step 1: Transcriptions (default visible) %>
-<div data-wizard-target="panel" data-wizard-index="0">
+<%= form_with url: estimates_path, method: :post, data: { controller: "transcription" } do |f| %>
   <div class="space-y-5">
-    <%# Paste area %>
+    <%# Project config (collapsible) %>
+    <details class="rounded-xl border border-border bg-card group">
+      <summary class="px-5 py-3 cursor-pointer text-sm font-semibold text-card-foreground flex items-center justify-between">
+        <span class="flex items-center gap-2">
+          <%= icon("sliders_horizontal", classes: "h-3.5 w-3.5 text-muted-foreground") %>
+          Configuración del proyecto
+        </span>
+        <%= icon("chevron_down", classes: "h-4 w-4 text-muted-foreground transition-transform group-open:rotate-180") %>
+      </summary>
+      <div class="border-t border-border px-5 py-4 space-y-4">
+        <div>
+          <label class="block text-xs font-medium text-muted-foreground mb-1">Título</label>
+          <input type="text" name="estimation[title]" value="Estimacion <%= Date.current %>"
+            class="flex h-9 w-full rounded-md border border-border bg-surface px-3 py-1 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary" />
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-medium text-muted-foreground mb-1">Tarifa global (€/h)</label>
+            <input type="number" name="estimation[global_rate]" value="150" min="1"
+              class="flex h-9 w-full rounded-md border border-border bg-surface px-3 py-1 text-sm font-mono placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-muted-foreground mb-1">Moneda</label>
+            <select name="estimation[currency]"
+              class="flex h-9 w-full rounded-md border border-border bg-surface px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary">
+              <option value="EUR" selected>EUR (€)</option>
+              <option value="USD">USD ($)</option>
+              <option value="GBP">GBP (£)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <%# Transcription input card %>
     <div class="rounded-xl border border-border bg-card p-5">
       <h3 class="text-sm font-semibold text-card-foreground mb-3">
         Pegar transcripción de reunión
       </h3>
       <textarea
+        data-transcription-target="input"
+        data-action="input->transcription#inputChanged"
         placeholder="Pega aquí la transcripción de una reunión con el cliente..."
         class="flex min-h-[140px] w-full rounded-md border border-border bg-surface px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary resize-none"
       ></textarea>
       <div class="mt-3 flex items-center gap-3">
-        <button class="inline-flex items-center justify-center rounded-md bg-primary text-primary-foreground text-sm font-medium h-9 px-3 hover:bg-primary/90 transition-colors opacity-50 cursor-not-allowed" disabled>
+        <button type="button"
+          data-transcription-target="addBtn"
+          data-action="click->transcription#add"
+          class="inline-flex items-center justify-center rounded-md bg-primary text-primary-foreground text-sm font-medium h-9 px-3 hover:bg-primary/90 transition-colors opacity-50 cursor-not-allowed"
+          disabled>
           <%= icon("plus", classes: "mr-1.5 h-3.5 w-3.5") %>
           Añadir reunión
         </button>
         <span class="text-xs text-muted-foreground">o</span>
-        <button class="inline-flex items-center justify-center rounded-md border border-border bg-card text-sm font-medium h-9 px-3 hover:bg-surface-hover transition-colors">
+        <button type="button"
+          data-action="click->transcription#uploadFile"
+          class="inline-flex items-center justify-center rounded-md border border-border bg-card text-sm font-medium h-9 px-3 hover:bg-surface-hover transition-colors">
           <%= icon("upload", classes: "mr-1.5 h-3.5 w-3.5") %>
           Subir archivo .txt
         </button>
+        <input type="file" accept=".txt" class="hidden"
+          data-transcription-target="fileInput"
+          data-action="change->transcription#fileSelected" />
       </div>
     </div>
 
-    <%# Actions %>
+    <%# Transcription list (hidden until items exist) %>
+    <div data-transcription-target="listSection" class="hidden">
+      <div class="flex items-center justify-between mb-2">
+        <h4 class="text-sm font-semibold text-card-foreground">Transcripciones añadidas</h4>
+        <span data-transcription-target="counter" class="text-xs text-muted-foreground">0 transcripciones</span>
+      </div>
+      <div data-transcription-target="list" class="space-y-2">
+      </div>
+    </div>
+
+    <%# Template for transcription items %>
+    <template data-transcription-target="template">
+      <div data-transcription-item class="rounded-lg border border-border bg-surface px-4 py-3 flex items-start gap-3 animate-fade-in-up">
+        <div class="shrink-0 mt-0.5 text-primary">
+          <%= icon("file_text", classes: "h-4 w-4") %>
+        </div>
+        <div class="min-w-0 flex-1">
+          <p data-name class="text-sm font-medium text-card-foreground"></p>
+          <p data-preview class="text-xs text-muted-foreground mt-0.5 truncate"></p>
+          <input type="hidden" name="estimation[raw_transcriptions][]" />
+        </div>
+        <button type="button" data-action="click->transcription#remove"
+          class="shrink-0 rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors">
+          <%= icon("trash2", classes: "h-3.5 w-3.5") %>
+        </button>
+      </div>
+    </template>
+
+    <%# Submit %>
     <div class="flex justify-end">
-      <button class="inline-flex items-center justify-center rounded-md bg-primary text-primary-foreground text-sm font-medium h-10 px-4 hover:bg-primary/90 transition-colors opacity-50 cursor-not-allowed" disabled>
+      <button type="submit"
+        data-transcription-target="submitBtn"
+        class="inline-flex items-center justify-center rounded-md bg-primary text-primary-foreground text-sm font-medium h-10 px-4 hover:bg-primary/90 transition-colors opacity-50 cursor-not-allowed"
+        disabled>
         <%= icon("brain", classes: "mr-2 h-4 w-4") %>
         Analizar transcripciones
         <%= icon("arrow_right", classes: "ml-2 h-4 w-4") %>
       </button>
     </div>
   </div>
-</div>
-
-<%# Step 2: Blocks & Tasks (hidden placeholder) %>
-<div data-wizard-target="panel" data-wizard-index="1" style="display: none;">
-  <div class="space-y-5">
-    <div class="rounded-xl border border-primary/30 bg-card p-4 glow-sm flex items-center gap-3">
-      <%= icon("sparkles", classes: "h-4 w-4 text-primary shrink-0") %>
-      <p class="text-sm text-card-foreground">
-        Funcionalidad disponible tras analizar transcripciones en el Paso 1.
-      </p>
-    </div>
-  </div>
-</div>
-
-<%# Step 3: Estimation results (hidden placeholder) %>
-<div data-wizard-target="panel" data-wizard-index="2" style="display: none;">
-  <div class="space-y-5">
-    <div class="rounded-xl border border-border bg-card p-12 flex flex-col items-center justify-center gap-4">
-      <%= icon("clock", classes: "h-8 w-8 text-muted-foreground") %>
-      <p class="text-sm text-muted-foreground">
-        Los resultados de estimación aparecerán aquí una vez completado el análisis.
-      </p>
-    </div>
-  </div>
-</div>
+<% end %>
