@@ -5,7 +5,7 @@
 <%= form_with url: estimates_path, method: :post, data: { controller: "transcription" } do |f| %>
   <div class="space-y-5">
     <%# Project config (collapsible) %>
-    <details class="rounded-xl border border-border bg-card group">
+    <details open class="rounded-xl border border-border bg-card group">
       <summary class="px-5 py-3 cursor-pointer text-sm font-semibold text-card-foreground flex items-center justify-between">
         <span class="flex items-center gap-2">
           <%= icon("sliders_horizontal", classes: "h-3.5 w-3.5 text-muted-foreground") %>

@@ -28,7 +28,7 @@
               <span data-collapsible-target="iconCollapsed" class="hidden"><%= icon("chevron_right", classes: "h-4 w-4") %></span>
             </button>
 
-            <%= f.hidden_field "functional_blocks_attributes[#{bi}][id]", value: block.id %>
+            <input type="hidden" name="estimation[functional_blocks_attributes][<%= bi %>][id]" value="<%= block.id %>" />
             <input type="text"
               name="estimation[functional_blocks_attributes][<%= bi %>][name]"
               value="<%= block.name %>"

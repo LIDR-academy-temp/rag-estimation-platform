@@ -1,4 +1,6 @@
 class EstimationJob < ApplicationJob
+  include EstimationCalculations
+
   queue_as :default
 
   retry_on RagServiceClient::TimeoutError, wait: 10.seconds, attempts: 3
@@ -34,6 +36,7 @@ class EstimationJob < ApplicationJob
       estimation.references.create!(ref_attrs)
     end
 
+    recalculate_totals!(estimation)
     broadcast_update(estimation)
   rescue RagServiceClient::Error => e
     estimation = Estimation.find_by(id: estimation_id)

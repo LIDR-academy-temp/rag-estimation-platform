@@ -94,16 +94,24 @@ class RagResponseParserTest < ActiveSupport::TestCase
           "expected" => { "hours" => 120 },
           "pessimistic" => { "hours" => 180 }
         },
-        "estimated_cost" => {
-          "optimistic" => { "amount" => 9600 },
-          "expected" => { "amount" => 14400 },
-          "pessimistic" => { "amount" => 21600 }
-        },
         "confidence" => { "score" => 0.82, "level" => "high" },
         "suggested_technologies" => ["Ruby", "Rails"],
         "suggested_breakdown" => [
-          { "name" => "Auth", "days" => 5, "unit_price" => 130 },
-          { "name" => "Frontend", "days" => 10, "unit_price" => 100 }
+          {
+            "name" => "Auth",
+            "tasks" => [
+              { "name" => "Login flow", "hours" => 16 },
+              { "name" => "Session management", "hours" => 24 }
+            ]
+          },
+          {
+            "name" => "Frontend",
+            "tasks" => [
+              { "name" => "Layout components", "hours" => 32 },
+              { "name" => "Form validation", "hours" => 20 },
+              { "name" => "Responsive design", "hours" => 28 }
+            ]
+          }
         ]
       },
       "references" => [
@@ -127,10 +135,23 @@ class RagResponseParserTest < ActiveSupport::TestCase
     assert_equal 80, result[:estimation][:total_hours_optimistic]
     assert_equal 120, result[:estimation][:total_hours_expected]
     assert_equal 180, result[:estimation][:total_hours_pessimistic]
+    assert_nil result[:estimation][:total_cost_optimistic]
 
     assert_equal 2, result[:blocks].size
     assert_equal "Auth", result[:blocks][0][:name]
-    assert_equal 40, result[:blocks][0][:tasks_attributes][0][:hours_expected] # 5 days * 8h
+    assert_equal 2, result[:blocks][0][:tasks_attributes].size
+    assert_equal "Login flow", result[:blocks][0][:tasks_attributes][0][:name]
+    assert_equal 16, result[:blocks][0][:tasks_attributes][0][:hours_expected]
+    assert_equal "Session management", result[:blocks][0][:tasks_attributes][1][:name]
+    assert_equal 24, result[:blocks][0][:tasks_attributes][1][:hours_expected]
+
+    assert_equal "Frontend", result[:blocks][1][:name]
+    assert_equal 3, result[:blocks][1][:tasks_attributes].size
+    assert_equal "Layout components", result[:blocks][1][:tasks_attributes][0][:name]
+
+    # Verify optimistic/pessimistic ratios are applied (80/120 = 0.667, 180/120 = 1.5)
+    assert_in_delta(16 * (80.0 / 120), result[:blocks][0][:tasks_attributes][0][:hours_optimistic], 0.01)
+    assert_in_delta(16 * (180.0 / 120), result[:blocks][0][:tasks_attributes][0][:hours_pessimistic], 0.01)
 
     assert_equal 1, result[:references].size
     assert_equal "ref1", result[:references][0][:chunk_id]
@@ -155,7 +176,6 @@ class RagResponseParserTest < ActiveSupport::TestCase
           "expected" => { "hours" => 20 },
           "pessimistic" => { "hours" => 30 }
         },
-        "estimated_cost" => {},
         "confidence" => {}
       }
     }

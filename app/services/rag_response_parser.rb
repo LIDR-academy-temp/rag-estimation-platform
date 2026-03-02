@@ -48,7 +48,6 @@ class RagResponseParser
     raise RagServiceClient::Error, "Unexpected RAG response: missing 'estimation' key" unless detail.is_a?(Hash)
 
     effort = detail["estimated_effort"] || {}
-    cost = detail["estimated_cost"] || {}
     confidence = detail["confidence"] || {}
 
     notes = detail["notes"]
@@ -62,30 +61,25 @@ class RagResponseParser
       technologies: detail["suggested_technologies"],
       total_hours_optimistic: effort.dig("optimistic", "hours") || 0,
       total_hours_expected: effort.dig("expected", "hours") || 0,
-      total_hours_pessimistic: effort.dig("pessimistic", "hours") || 0,
-      total_cost_optimistic: cost.dig("optimistic", "amount") || 0,
-      total_cost_expected: cost.dig("expected", "amount") || 0,
-      total_cost_pessimistic: cost.dig("pessimistic", "amount") || 0
+      total_hours_pessimistic: effort.dig("pessimistic", "hours") || 0
     }
 
     expected_hours = effort.dig("expected", "hours").to_f
     optimistic_ratio = expected_hours > 0 ? effort.dig("optimistic", "hours").to_f / expected_hours : 1.0
     pessimistic_ratio = expected_hours > 0 ? effort.dig("pessimistic", "hours").to_f / expected_hours : 1.0
 
-    blocks_attrs = (detail["suggested_breakdown"] || []).map.with_index do |item, i|
-      task_hours_expected = (item["days"] || 0) * 8
-      {
-        name: item["name"],
-        position: i,
-        tasks_attributes: [{
-          name: item["name"],
-          hours_optimistic: (task_hours_expected * optimistic_ratio).round(2),
-          hours_expected: task_hours_expected,
-          hours_pessimistic: (task_hours_expected * pessimistic_ratio).round(2),
-          rate: item["unit_price"],
-          position: 0
-        }]
-      }
+    blocks_attrs = (detail["suggested_breakdown"] || []).map.with_index do |block, i|
+      tasks = (block["tasks"] || []).map.with_index do |task, j|
+        task_hours = task["hours"] || 0
+        {
+          name: task["name"],
+          hours_optimistic: (task_hours * optimistic_ratio).round(2),
+          hours_expected: task_hours,
+          hours_pessimistic: (task_hours * pessimistic_ratio).round(2),
+          position: j
+        }
+      end
+      { name: block["name"], position: i, tasks_attributes: tasks }
     end
 
     references_attrs = (response["references"] || []).map do |ref|

@@ -1,5 +1,5 @@
 <% content_for :page_actions do %>
-  <%= link_to new_estimate_path, class: "inline-flex items-center justify-center rounded-md bg-primary text-primary-foreground text-sm font-medium h-9 px-4 hover:bg-primary/90 transition-colors" do %>
+  <%= link_to estimate_path, class: "inline-flex items-center justify-center rounded-md bg-primary text-primary-foreground text-sm font-medium h-9 px-4 hover:bg-primary/90 transition-colors" do %>
     <%= icon("plus", classes: "mr-2 h-4 w-4") %> Nueva Estimación
   <% end %>
 <% end %>
@@ -73,11 +73,11 @@
             </div>
           </div>
           <div class="flex items-center gap-2">
-            <%= link_to estimate_detail_path(est), class: "inline-flex items-center gap-1 rounded px-2 py-1 text-xs text-muted-foreground hover:bg-surface-hover hover:text-card-foreground transition-colors", aria: { label: "Ver #{est.title}" } do %>
+            <%= link_to estimate_detail_path(est), class: "inline-flex items-center gap-1 rounded px-2 py-1 text-xs text-muted-foreground hover:bg-surface-hover hover:text-card-foreground transition-colors", data: { turbo_frame: "_top" }, aria: { label: "Ver #{est.title}" } do %>
               <%= icon("eye", classes: "h-3.5 w-3.5") %> Ver
             <% end %>
             <% if est.status.in?(%w[completed draft]) %>
-              <%= link_to edit_estimation_path(est), class: "inline-flex items-center gap-1 rounded px-2 py-1 text-xs text-muted-foreground hover:bg-surface-hover hover:text-card-foreground transition-colors", aria: { label: "Editar #{est.title}" } do %>
+              <%= link_to edit_estimation_path(est), class: "inline-flex items-center gap-1 rounded px-2 py-1 text-xs text-muted-foreground hover:bg-surface-hover hover:text-card-foreground transition-colors", data: { turbo_frame: "_top" }, aria: { label: "Editar #{est.title}" } do %>
                 <%= icon("pencil", classes: "h-3.5 w-3.5") %> Editar
               <% end %>
             <% end %>
@@ -118,11 +118,11 @@
             <span class="text-sm font-mono text-card-foreground text-right"><%= est.confidence_score ? "#{(est.confidence_score * 100).round(0)}%" : "—" %></span>
             <span class="text-xs text-muted-foreground"><%= est.created_at.strftime("%d/%m/%Y") %></span>
             <div class="flex items-center gap-1">
-              <%= link_to estimate_detail_path(est), class: "rounded p-1.5 text-muted-foreground hover:bg-surface-hover hover:text-card-foreground transition-colors", aria: { label: "Ver #{est.title}" } do %>
+              <%= link_to estimate_detail_path(est), class: "rounded p-1.5 text-muted-foreground hover:bg-surface-hover hover:text-card-foreground transition-colors", data: { turbo_frame: "_top" }, aria: { label: "Ver #{est.title}" } do %>
                 <%= icon("eye", classes: "h-3.5 w-3.5") %>
               <% end %>
               <% if est.status.in?(%w[completed draft]) %>
-                <%= link_to edit_estimation_path(est), class: "rounded p-1.5 text-muted-foreground hover:bg-surface-hover hover:text-card-foreground transition-colors", aria: { label: "Editar #{est.title}" } do %>
+                <%= link_to edit_estimation_path(est), class: "rounded p-1.5 text-muted-foreground hover:bg-surface-hover hover:text-card-foreground transition-colors", data: { turbo_frame: "_top" }, aria: { label: "Editar #{est.title}" } do %>
                   <%= icon("pencil", classes: "h-3.5 w-3.5") %>
                 <% end %>
               <% end %>
@@ -139,10 +139,7 @@
     <div class="rounded-xl border border-dashed border-border bg-card p-10 text-center">
       <%= icon("layers", classes: "h-10 w-10 text-muted-foreground mx-auto mb-3") %>
       <p class="text-sm font-medium text-card-foreground mb-1">No hay estimaciones todavía</p>
-      <p class="text-xs text-muted-foreground mb-4">Crea tu primera estimación desde una transcripción</p>
-      <%= link_to new_estimate_path, class: "inline-flex items-center justify-center rounded-md bg-primary text-primary-foreground text-sm font-medium h-9 px-4 hover:bg-primary/90 transition-colors" do %>
-        <%= icon("plus", classes: "mr-2 h-4 w-4") %> Nueva Estimación
-      <% end %>
+      <p class="text-xs text-muted-foreground">Crea tu primera estimación desde una transcripción</p>
     </div>
   <% end %>
 

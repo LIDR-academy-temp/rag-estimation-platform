@@ -14,7 +14,7 @@ Rails.application.routes.draw do
   get "ingest", to: "ingest#index"
   post "ingest", to: "ingest#create"
 
-  get "estimate", to: "estimates#index"
+  get "estimate", to: "estimates#index", as: :estimate
   get "estimates/new", to: "estimates#new", as: :new_estimate
   post "estimates", to: "estimates#create", as: :estimates
   get "estimates/:id", to: "estimates#show", as: :estimate_detail
