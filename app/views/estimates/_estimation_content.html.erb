@@ -86,6 +86,17 @@
   <% elsif estimation.status == "structuring" && estimation.functional_blocks.any? %>
     <%= render "estimates/step2_structuring", estimation: estimation %>
 
+  <% elsif estimation.status == "validating" %>
+    <div class="rounded-xl border border-border bg-card p-8">
+      <div class="flex flex-col items-center justify-center gap-4">
+        <div class="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+        <p class="text-sm font-medium text-card-foreground">Calculando horas por tarea...</p>
+        <p class="text-xs text-muted-foreground">
+          Buscando referencias historicas para cada tarea y ajustando las horas estimadas.
+        </p>
+      </div>
+    </div>
+
   <% elsif estimation.status == "completed" && estimation.functional_blocks.any? %>
     <%= render "estimates/step3_completed", estimation: estimation %>
 
@@ -98,7 +109,7 @@
   <% end %>
 
   <%# References %>
-  <% if estimation.status.in?(%w[structuring completed]) && estimation.references.any? %>
+  <% if estimation.status.in?(%w[structuring validating completed]) && estimation.references.any? %>
     <div class="rounded-xl border border-border bg-card p-5">
       <h2 class="text-sm font-semibold text-card-foreground mb-4">Referencias historicas utilizadas</h2>
       <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">

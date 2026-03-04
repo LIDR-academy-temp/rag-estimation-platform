@@ -5,7 +5,7 @@ class Estimation < ApplicationRecord
   has_many :references, dependent: :destroy
 
   validates :title, presence: true
-  validates :status, inclusion: { in: %w[draft processing structuring completed failed] }
+  validates :status, inclusion: { in: %w[draft processing structuring validating completed failed] }
   validates :global_rate, numericality: { greater_than: 0 }, allow_nil: true
   validates :currency, inclusion: { in: %w[EUR USD GBP] }, allow_nil: true
   validates :confidence_score, numericality: { in: 0..1 }, allow_nil: true

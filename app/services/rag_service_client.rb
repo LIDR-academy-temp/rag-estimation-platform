@@ -34,11 +34,20 @@ class RagServiceClient
   end
 
   def estimate(query:, context: nil, options: nil)
+    merged_options = (options || {}).merge(skip_validation: true)
     post("/api/v1/estimate", {
       query: query,
       context: context,
-      options: options
+      options: merged_options
     }.compact)
+  end
+
+  def validate_breakdown(breakdown:, estimated_effort:, currency: "EUR")
+    post("/api/v1/estimate/validate", {
+      breakdown: breakdown,
+      estimated_effort: estimated_effort,
+      currency: currency
+    })
   end
 
   def estimate_batch(queries:, shared_context: nil, options: nil)

@@ -61,9 +61,11 @@ class EstimatesController < ApplicationController
       @estimation.tasks.where(hours_expected: nil).update_all(
         hours_optimistic: 0, hours_expected: 0, hours_pessimistic: 0
       )
-      @estimation.update!(status: "completed")
       recalculate_totals!(@estimation)
-      redirect_to estimate_detail_path(@estimation), notice: "Estructura confirmada. Revisa las horas estimadas."
+      @estimation.update!(status: "validating")
+      TaskValidationJob.perform_later(@estimation.id)
+      redirect_to estimate_detail_path(@estimation),
+        notice: "Estructura confirmada. Calculando horas estimadas..."
     else
       redirect_to estimate_detail_path(@estimation), alert: "Error al guardar la estructura."
     end

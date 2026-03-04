@@ -99,4 +99,21 @@ class RagResponseParser
   rescue NoMethodError, TypeError => e
     raise RagServiceClient::Error, "Failed to parse RAG estimate response: #{e.message}"
   end
+
+  def self.parse_validation(response)
+    (response["validated_breakdown"] || []).map do |block|
+      {
+        name: block["name"],
+        tasks: (block["tasks"] || []).map do |task|
+          {
+            name: task["name"],
+            hours: task["hours"],
+            original_hours: task["original_hours"],
+            adjustment_reason: task["adjustment_reason"],
+            references_found: task["references_found"]
+          }
+        end
+      }
+    end
+  end
 end
