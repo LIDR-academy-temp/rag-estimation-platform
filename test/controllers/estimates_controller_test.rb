@@ -90,4 +90,82 @@ class EstimatesControllerTest < ActionDispatch::IntegrationTest
     get estimate_detail_path(estimation)
     assert_redirected_to dashboard_path
   end
+
+  # --- export_json ---
+
+  test "GET export_json downloads JSON for completed estimation" do
+    sign_in users(:antonio)
+    estimation = estimations(:completed_estimation)
+    get export_estimate_json_path(estimation)
+
+    assert_response :success
+    assert_equal "application/json", response.content_type
+    assert_match "attachment", response.headers["Content-Disposition"]
+    assert_match "estimacion-completa-rag-export.json", response.headers["Content-Disposition"]
+
+    json = JSON.parse(response.body)
+    assert json.key?("quote")
+    assert json.key?("source")
+    assert_equal "platform_export", json["source"]
+    assert json["quote"]["project"]["title"].present?
+    assert json["quote"]["scope_blocks"].is_a?(Array)
+  end
+
+  test "GET export_json redirects for non-completed estimation" do
+    sign_in users(:antonio)
+    estimation = estimations(:draft_estimation)
+    get export_estimate_json_path(estimation)
+
+    assert_redirected_to estimate_detail_path(estimation)
+    assert_equal "Solo se puede exportar una estimación completada.", flash[:alert]
+  end
+
+  test "GET export_json requires authentication" do
+    estimation = estimations(:completed_estimation)
+    get export_estimate_json_path(estimation)
+    assert_redirected_to login_path
+  end
+
+  test "GET export_json rejects other user estimation" do
+    sign_in users(:antonio)
+    estimation = estimations(:other_user_estimation)
+    get export_estimate_json_path(estimation)
+    assert_redirected_to dashboard_path
+  end
+
+  # --- export_pdf ---
+
+  test "GET export_pdf returns PDF for completed estimation" do
+    sign_in users(:antonio)
+    estimation = estimations(:completed_estimation)
+    get export_estimate_pdf_path(estimation)
+
+    assert_response :success
+    assert_equal "application/pdf", response.content_type
+    assert_match "inline", response.headers["Content-Disposition"]
+    assert_match "estimacion-completa-presupuesto.pdf", response.headers["Content-Disposition"]
+    assert response.body.start_with?("%PDF")
+  end
+
+  test "GET export_pdf redirects for non-completed estimation" do
+    sign_in users(:antonio)
+    estimation = estimations(:draft_estimation)
+    get export_estimate_pdf_path(estimation)
+
+    assert_redirected_to estimate_detail_path(estimation)
+    assert_equal "Solo se puede exportar una estimación completada.", flash[:alert]
+  end
+
+  test "GET export_pdf requires authentication" do
+    estimation = estimations(:completed_estimation)
+    get export_estimate_pdf_path(estimation)
+    assert_redirected_to login_path
+  end
+
+  test "GET export_pdf rejects other user estimation" do
+    sign_in users(:antonio)
+    estimation = estimations(:other_user_estimation)
+    get export_estimate_pdf_path(estimation)
+    assert_redirected_to dashboard_path
+  end
 end

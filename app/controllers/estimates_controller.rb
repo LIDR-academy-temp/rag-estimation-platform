@@ -69,6 +69,45 @@ class EstimatesController < ApplicationController
     end
   end
 
+  def export_json
+    @estimation = current_user.estimations
+      .includes(:user, functional_blocks: :tasks)
+      .find(params[:id])
+
+    unless @estimation.status == "completed"
+      redirect_to estimate_detail_path(@estimation),
+        alert: "Solo se puede exportar una estimación completada."
+      return
+    end
+
+    export_data = EstimationExportService.new(@estimation).call
+    filename = "#{@estimation.title.parameterize}-rag-export.json"
+
+    send_data(
+      JSON.pretty_generate(export_data),
+      filename: filename,
+      type: "application/json",
+      disposition: "attachment"
+    )
+  end
+
+  def export_pdf
+    @estimation = current_user.estimations
+      .includes(:user, :references, functional_blocks: :tasks)
+      .find(params[:id])
+
+    unless @estimation.status == "completed"
+      redirect_to estimate_detail_path(@estimation),
+        alert: "Solo se puede exportar una estimación completada."
+      return
+    end
+
+    pdf_data = EstimationPdfService.new(@estimation).call
+    filename = "#{@estimation.title.parameterize}-presupuesto.pdf"
+
+    send_data(pdf_data, filename: filename, type: "application/pdf", disposition: "inline")
+  end
+
   def update_estimation
     @estimation = current_user.estimations
       .includes(functional_blocks: :tasks)

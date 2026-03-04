@@ -21,6 +21,8 @@ Rails.application.routes.draw do
   post "estimates/:id/retry", to: "estimates#retry_estimation", as: :retry_estimate
   patch "estimates/:id/structure", to: "estimates#update_structure", as: :update_estimate_structure
   patch "estimates/:id/estimation", to: "estimates#update_estimation", as: :update_estimate_estimation
+  get "estimates/:id/export", to: "estimates#export_json", as: :export_estimate_json
+  get "estimates/:id/export_pdf", to: "estimates#export_pdf", as: :export_estimate_pdf
 
   get "search", to: "searches#index"
 

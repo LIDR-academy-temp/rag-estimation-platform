@@ -46,6 +46,10 @@ gem "faraday", "~> 2.9"
 # Tailwind CSS integration for Rails
 gem "tailwindcss-rails", "~> 3.0"
 
+# PDF generation
+gem "prawn", "~> 2.5"
+gem "prawn-table", "~> 0.2"
+
 # Use Active Storage variants [https://guides.rubyonrails.org/active_storage_overview.html#transforming-images]
 # gem "image_processing", "~> 1.2"
 

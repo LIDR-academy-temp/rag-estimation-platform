@@ -1,4 +1,15 @@
 <% content_for :page_actions do %>
+  <% if @estimation.status == "completed" %>
+    <%= link_to export_estimate_pdf_path(@estimation),
+      target: "_blank",
+      class: "inline-flex items-center justify-center rounded-md bg-primary text-primary-foreground text-sm font-medium h-9 px-3 hover:bg-primary/90 transition-colors print:hidden" do %>
+      <%= icon("file_text", classes: "mr-2 h-4 w-4") %> Exportar PDF
+    <% end %>
+    <%= link_to export_estimate_json_path(@estimation),
+      class: "inline-flex items-center justify-center rounded-md bg-primary text-primary-foreground text-sm font-medium h-9 px-3 hover:bg-primary/90 transition-colors print:hidden" do %>
+      <%= icon("file_json", classes: "mr-2 h-4 w-4") %> Exportar JSON
+    <% end %>
+  <% end %>
   <%= link_to estimations_path, class: "inline-flex items-center justify-center rounded-md border border-border bg-card text-sm font-medium h-9 px-3 hover:bg-surface-hover transition-colors print:hidden" do %>
     <%= icon("arrow_left", classes: "mr-2 h-4 w-4") %> Volver
   <% end %>
