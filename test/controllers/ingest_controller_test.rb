@@ -56,6 +56,6 @@ class IngestControllerTest < ActionDispatch::IntegrationTest
       post ingest_path, params: { raw_json: raw_json }
     end
     assert_redirected_to ingest_path
-    assert_match "RAG no está disponible", flash[:alert]
+    assert_match /servicio RAG/, flash[:alert]
   end
 end

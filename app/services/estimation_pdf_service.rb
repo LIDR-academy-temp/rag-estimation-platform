@@ -75,30 +75,22 @@ class EstimationPdfService
     pdf.fill_color DARK_TEXT
 
     currency = @estimation.currency
-    header = ["Tarea", "Tarifa", "H.Opt", "H.Esp", "H.Pes", "Coste Opt", "Coste Esp", "Coste Pes"]
+    header = ["Tarea", "Tarifa", "Horas", "Coste"]
 
     rows = block.tasks.order(:position).map do |task|
       rate = task.effective_rate
       [
         task.name,
         "#{format_number(rate)} #{currency}",
-        format_number(task.hours_optimistic),
         format_number(task.hours_expected),
-        format_number(task.hours_pessimistic),
-        "#{format_number(task.cost(:optimistic))} #{currency}",
-        "#{format_number(task.cost(:expected))} #{currency}",
-        "#{format_number(task.cost(:pessimistic))} #{currency}"
+        "#{format_number(task.cost(:expected))} #{currency}"
       ]
     end
 
     subtotal_row = [
       { content: "Subtotal #{block.name}", colspan: 2, font_style: :bold },
-      format_number(block.total_hours_optimistic),
       format_number(block.total_hours_expected),
-      format_number(block.total_hours_pessimistic),
-      "#{format_number(block.total_cost(:optimistic))} #{currency}",
-      "#{format_number(block.total_cost(:expected))} #{currency}",
-      "#{format_number(block.total_cost(:pessimistic))} #{currency}"
+      "#{format_number(block.total_cost(:expected))} #{currency}"
     ]
 
     table_data = [header] + rows + [subtotal_row]
@@ -109,7 +101,7 @@ class EstimationPdfService
       t.row(-1).background_color = SUBTOTAL_BG
       t.row(-1).font_style = :bold
       t.columns(1..-1).align = :right
-      t.columns(0).width = 140
+      t.columns(0).width = 200
     end
 
     pdf.move_down 14
@@ -123,22 +115,12 @@ class EstimationPdfService
 
     currency = @estimation.currency
     totals_data = [
-      ["", "Optimista", "Esperado", "Pesimista"],
-      [
-        "Horas totales",
-        format_number(@estimation.total_hours_optimistic),
-        format_number(@estimation.total_hours_expected),
-        format_number(@estimation.total_hours_pessimistic)
-      ],
-      [
-        "Coste total",
-        "#{format_number(@estimation.total_cost_optimistic)} #{currency}",
-        "#{format_number(@estimation.total_cost_expected)} #{currency}",
-        "#{format_number(@estimation.total_cost_pessimistic)} #{currency}"
-      ]
+      ["", "Esperado"],
+      ["Horas totales", format_number(@estimation.total_hours_expected)],
+      ["Coste total", "#{format_number(@estimation.total_cost_expected)} #{currency}"]
     ]
 
-    table_width = 360
+    table_width = 260
     x_offset = (pdf.bounds.width - table_width) / 2
 
     pdf.indent(x_offset) do

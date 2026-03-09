@@ -55,7 +55,8 @@ class IngestController < ApplicationController
     rescue RagServiceClient::Error => e
       Rails.logger.error("RAG ingest failed: #{e.message}")
       @document.update!(status: "failed")
-      redirect_to ingest_path, alert: "Presupuesto guardado localmente pero falló el envío al servicio RAG: #{e.message}"
+      error_msg = e.message.truncate(500)
+      redirect_to ingest_path, alert: "Presupuesto guardado localmente pero falló el envío al servicio RAG: #{error_msg}"
     end
   rescue TypeError
     redirect_to ingest_path, alert: "El JSON proporcionado no es válido."

@@ -12,68 +12,116 @@ class EstimationExportServiceTest < ActiveSupport::TestCase
     assert_equal "antonio@example.com", @result[:ingested_by]
   end
 
-  test "quote contains project, scope_blocks, totals and team_conditions" do
-    quote = @result[:quote]
-    assert_equal %i[project scope_blocks totals team_conditions].sort, quote.keys.sort
+  test "quote contains all 13 template sections" do
+    expected_keys = %i[client project dates currency discount objectives scope_blocks
+                       roadmap_phases items team_members conditions notes terms].sort
+    assert_equal expected_keys, @result[:quote].keys.sort
   end
 
-  test "project maps title, currency, technologies and confidence" do
+  test "client maps name, email and company nil" do
+    client = @result[:quote][:client]
+    assert_equal "Antonio Pérez", client[:name]
+    assert_equal "antonio@example.com", client[:email]
+    assert_nil client[:company]
+  end
+
+  test "project maps title, subtitle and proposal_date" do
     project = @result[:quote][:project]
     assert_equal "Estimación Completa", project[:title]
-    assert_equal "EUR", project[:currency]
-    assert_equal ["Ruby", "Rails"], project[:technologies]
-    assert_equal 0.85, project[:confidence]
+    assert_match(/\A\d{4}-\d{2}-\d{2}\z/, project[:proposal_date])
   end
 
-  test "scope_blocks maps functional blocks with items and subtotals" do
+  test "dates has issue_date and valid_until nil" do
+    dates = @result[:quote][:dates]
+    assert_match(/\A\d{4}-\d{2}-\d{2}\z/, dates[:issue_date])
+    assert_nil dates[:valid_until]
+  end
+
+  test "currency is at quote level" do
+    assert_equal "EUR", @result[:quote][:currency]
+  end
+
+  test "placeholder sections are empty" do
+    quote = @result[:quote]
+    assert_equal [], quote[:objectives]
+    assert_equal [], quote[:roadmap_phases]
+    assert_equal [], quote[:team_members]
+    assert_nil quote[:notes]
+    assert_nil quote[:terms]
+  end
+
+  test "conditions has empty structure" do
+    conditions = @result[:quote][:conditions]
+    assert_nil conditions[:payment_terms]
+    assert_nil conditions[:included_services]
+    assert_equal [], conditions[:additional_services]
+  end
+
+  test "scope_blocks maps blocks without legacy fields" do
     blocks = @result[:quote][:scope_blocks]
     assert_equal 2, blocks.length
 
-    auth_block = blocks.find { |b| b[:name] == "Autenticación" }
-    assert_not_nil auth_block
-    assert_equal 2, auth_block[:items].length
-    assert_equal ["Ruby", "Rails"], auth_block[:technologies]
+    blocks.each do |block|
+      assert block.key?(:title)
+      assert block.key?(:short_description)
+      assert block.key?(:detailed_features)
+      refute block.key?(:items), "scope_block should not contain items"
+      refute block.key?(:name), "scope_block should not contain name"
+      refute block.key?(:subtotal_hours), "scope_block should not contain subtotal_hours"
+      refute block.key?(:subtotal_cost), "scope_block should not contain subtotal_cost"
+    end
   end
 
-  test "each item has hours with three estimates, unit_price and total" do
-    auth_block = @result[:quote][:scope_blocks].find { |b| b[:name] == "Autenticación" }
-    login_item = auth_block[:items].find { |i| i[:name] == "Login con JWT" }
-
-    assert_equal({ optimistic: 8.0, expected: 16.0, pessimistic: 24.0 }, login_item[:hours])
-    assert_equal 130.0, login_item[:unit_price]
-    assert_equal({ optimistic: 1040.0, expected: 2080.0, pessimistic: 3120.0 }, login_item[:total])
+  test "scope_block short_description includes block name and task names" do
+    auth_block = @result[:quote][:scope_blocks].find { |b| b[:title] == "Autenticación" }
+    assert_equal "Autenticación: Login con JWT, OAuth Integration", auth_block[:short_description]
   end
 
-  test "effective_rate uses task rate when present, global_rate when nil" do
-    auth_block = @result[:quote][:scope_blocks].find { |b| b[:name] == "Autenticación" }
-
-    login_item = auth_block[:items].find { |i| i[:name] == "Login con JWT" }
-    assert_equal 130.0, login_item[:unit_price] # task-level rate
-
-    oauth_item = auth_block[:items].find { |i| i[:name] == "OAuth Integration" }
-    assert_equal 120.0, oauth_item[:unit_price] # inherited global_rate
+  test "scope_block features lists task names" do
+    auth_block = @result[:quote][:scope_blocks].find { |b| b[:title] == "Autenticación" }
+    assert_equal ["Login con JWT", "OAuth Integration"], auth_block[:features]
   end
 
-  test "scope_block subtotals are computed correctly" do
-    auth_block = @result[:quote][:scope_blocks].find { |b| b[:name] == "Autenticación" }
-
-    assert_equal({ optimistic: 24.0, expected: 40.0, pessimistic: 64.0 }, auth_block[:subtotal_hours])
-
-    # login: 8*130=1040, 16*130=2080, 24*130=3120
-    # oauth: 16*120=1920, 24*120=2880, 40*120=4800
-    assert_equal({ optimistic: 2960.0, expected: 4960.0, pessimistic: 7920.0 }, auth_block[:subtotal_cost])
+  test "scope_block detailed_features maps tasks with title and description" do
+    auth_block = @result[:quote][:scope_blocks].find { |b| b[:title] == "Autenticación" }
+    assert_equal 2, auth_block[:detailed_features].length
+    auth_block[:detailed_features].each do |df|
+      assert df.key?(:title)
+      assert df.key?(:description)
+      assert_nil df[:description]
+    end
   end
 
-  test "totals come from estimation stored values" do
-    totals = @result[:quote][:totals]
-    assert_equal({ optimistic: 100.0, expected: 150.0, pessimistic: 200.0 }, totals[:hours])
-    assert_equal({ optimistic: 12000.0, expected: 18000.0, pessimistic: 24000.0 }, totals[:cost])
+  test "items is a flat array of all tasks" do
+    items = @result[:quote][:items]
+    assert_equal 3, items.length
   end
 
-  test "team_conditions includes base_rate and currency" do
-    tc = @result[:quote][:team_conditions]
-    assert_equal 120.0, tc[:base_rate]
-    assert_equal "EUR", tc[:currency]
+  test "each item has the correct keys" do
+    expected_keys = %i[type name description quantity unit unit_price discount_percent phase].sort
+    @result[:quote][:items].each do |item|
+      assert_equal expected_keys, item.keys.sort
+    end
+  end
+
+  test "item values for Login con JWT" do
+    item = @result[:quote][:items].find { |i| i[:name] == "Login con JWT" }
+    assert_equal "task", item[:type]
+    assert_equal 16.0, item[:quantity]
+    assert_equal "hora", item[:unit]
+    assert_equal 130.0, item[:unit_price]
+    assert_equal 0, item[:discount_percent]
+    assert_equal "Autenticación", item[:phase]
+  end
+
+  test "effective_rate falls back to global_rate when task rate is nil" do
+    item = @result[:quote][:items].find { |i| i[:name] == "OAuth Integration" }
+    assert_equal 120.0, item[:unit_price]
+  end
+
+  test "item phase matches parent block name" do
+    item = @result[:quote][:items].find { |i| i[:name] == "Componentes UI" }
+    assert_equal "Frontend", item[:phase]
   end
 
   test "ingest compatibility: quote.project.title is present" do
@@ -82,7 +130,14 @@ class EstimationExportServiceTest < ActiveSupport::TestCase
 
   test "ingest compatibility: scope_blocks have technologies" do
     @result[:quote][:scope_blocks].each do |block|
-      assert block[:technologies].is_a?(Array), "scope_block #{block[:name]} missing technologies"
+      assert block[:technologies].is_a?(Array), "scope_block #{block[:title]} missing technologies"
+    end
+  end
+
+  test "ingest compatibility: scope_blocks have title and short_description" do
+    @result[:quote][:scope_blocks].each do |block|
+      assert block[:title].present?, "scope_block missing title"
+      assert block[:short_description].present?, "scope_block missing short_description"
     end
   end
 end

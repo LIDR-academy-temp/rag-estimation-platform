@@ -12,7 +12,7 @@
   %>
   <div
     data-controller="auto-dismiss"
-    data-auto-dismiss-delay-value="5000"
+    data-auto-dismiss-delay-value="<%= %w[alert error].include?(type.to_s) ? 0 : 5000 %>"
     class="mb-4 flex items-center justify-between rounded-lg border px-4 py-3 text-sm transition-opacity duration-300 <%= classes %>"
   >
     <span><%= message %></span>

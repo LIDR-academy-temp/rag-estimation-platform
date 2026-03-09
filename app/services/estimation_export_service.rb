@@ -6,10 +6,19 @@ class EstimationExportService
   def call
     {
       quote: {
+        client: build_client,
         project: build_project,
+        dates: build_dates,
+        currency: @estimation.currency,
+        discount: { type: nil, amount: nil },
+        objectives: [],
         scope_blocks: build_scope_blocks,
-        totals: build_totals,
-        team_conditions: build_team_conditions
+        roadmap_phases: [],
+        items: build_items,
+        team_members: [],
+        conditions: { payment_terms: nil, included_services: nil, additional_services: [] },
+        notes: nil,
+        terms: nil
       },
       source: "platform_export",
       ingested_by: @estimation.user.email
@@ -18,73 +27,70 @@ class EstimationExportService
 
   private
 
+  def build_client
+    {
+      name: @estimation.user.name,
+      email: @estimation.user.email,
+      company: nil
+    }
+  end
+
   def build_project
     {
       title: @estimation.title,
       subtitle: @estimation.description,
-      currency: @estimation.currency,
-      technologies: technologies,
-      confidence: @estimation.confidence_score
+      proposal_date: @estimation.created_at.strftime("%Y-%m-%d")
+    }
+  end
+
+  def build_dates
+    {
+      issue_date: @estimation.created_at.strftime("%Y-%m-%d"),
+      valid_until: nil
     }
   end
 
   def build_scope_blocks
-    @estimation.functional_blocks.includes(:tasks).map do |block|
+    loaded_blocks.map do |block|
       {
-        name: block.name,
+        title: block.name,
+        short_description: generate_short_description(block),
+        long_description: nil,
+        features: block.tasks.map(&:name),
         technologies: technologies,
-        items: block.tasks.map { |task| build_item(task) },
-        subtotal_hours: {
-          optimistic: block.total_hours_optimistic.to_f,
-          expected: block.total_hours_expected.to_f,
-          pessimistic: block.total_hours_pessimistic.to_f
-        },
-        subtotal_cost: {
-          optimistic: block.total_cost(:optimistic).to_f,
-          expected: block.total_cost(:expected).to_f,
-          pessimistic: block.total_cost(:pessimistic).to_f
-        }
+        detailed_features: block.tasks.map { |task| { title: task.name, description: nil } }
       }
     end
   end
 
-  def build_item(task)
-    {
-      name: task.name,
-      hours: {
-        optimistic: task.hours_optimistic.to_f,
-        expected: task.hours_expected.to_f,
-        pessimistic: task.hours_pessimistic.to_f
-      },
-      unit_price: task.effective_rate.to_f,
-      total: {
-        optimistic: task.cost(:optimistic).to_f,
-        expected: task.cost(:expected).to_f,
-        pessimistic: task.cost(:pessimistic).to_f
-      }
-    }
+  def build_items
+    loaded_blocks.flat_map do |block|
+      block.tasks.map do |task|
+        {
+          type: "task",
+          name: task.name,
+          description: nil,
+          quantity: task.hours_expected.to_f,
+          unit: "hora",
+          unit_price: task.effective_rate.to_f,
+          discount_percent: 0,
+          phase: block.name
+        }
+      end
+    end
   end
 
-  def build_totals
-    {
-      hours: {
-        optimistic: @estimation.total_hours_optimistic.to_f,
-        expected: @estimation.total_hours_expected.to_f,
-        pessimistic: @estimation.total_hours_pessimistic.to_f
-      },
-      cost: {
-        optimistic: @estimation.total_cost_optimistic.to_f,
-        expected: @estimation.total_cost_expected.to_f,
-        pessimistic: @estimation.total_cost_pessimistic.to_f
-      }
-    }
+  def loaded_blocks
+    @loaded_blocks ||= @estimation.functional_blocks.includes(:tasks).to_a
   end
 
-  def build_team_conditions
-    {
-      base_rate: @estimation.global_rate.to_f,
-      currency: @estimation.currency
-    }
+  def generate_short_description(block)
+    task_names = block.tasks.map(&:name)
+    if task_names.any?
+      "#{block.name}: #{task_names.join(', ')}"
+    else
+      block.name
+    end
   end
 
   def technologies

@@ -56,7 +56,7 @@ class EstimatesControllerTest < ActionDispatch::IntegrationTest
           confidence: { score: 0.8, level: "high" },
           suggested_technologies: ["Ruby"],
           suggested_breakdown: [
-            { name: "Auth", days: 5, unit_price: 130 }
+            { name: "Auth", tasks: [{ name: "Setup Auth", hours: 40 }] }
           ]
         },
         references: []
@@ -109,6 +109,17 @@ class EstimatesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "platform_export", json["source"]
     assert json["quote"]["project"]["title"].present?
     assert json["quote"]["scope_blocks"].is_a?(Array)
+
+    assert json["quote"]["items"].is_a?(Array), "items should be an Array"
+    assert json["quote"].key?("client"), "quote should have client"
+    assert json["quote"].key?("currency"), "quote should have currency"
+
+    json["quote"]["scope_blocks"].each do |block|
+      assert block.key?("title"), "scope_block missing title"
+      assert block.key?("short_description"), "scope_block missing short_description"
+      refute block.key?("items"), "scope_block should not contain items"
+      refute block.key?("subtotal_hours"), "scope_block should not contain subtotal_hours"
+    end
   end
 
   test "GET export_json redirects for non-completed estimation" do

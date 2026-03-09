@@ -108,7 +108,8 @@ class RagServiceClient
     when 503
       raise ServiceUnavailableError, response.body&.dig("detail") || "Service unavailable"
     else
-      raise Error, "RAG service error (#{response.status}): #{response.body}"
+      detail = response.body.is_a?(Hash) ? response.body["detail"] : nil
+      raise Error, detail || "RAG service error (#{response.status})"
     end
   end
 end

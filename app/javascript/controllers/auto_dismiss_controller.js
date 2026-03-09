@@ -4,7 +4,9 @@ export default class extends Controller {
   static values = { delay: { type: Number, default: 5000 } }
 
   connect() {
-    this.timeout = setTimeout(() => this.dismiss(), this.delayValue)
+    if (this.delayValue > 0) {
+      this.timeout = setTimeout(() => this.dismiss(), this.delayValue)
+    }
   }
 
   disconnect() {

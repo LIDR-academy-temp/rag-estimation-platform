@@ -29,7 +29,7 @@ class EstimationWizardTest < ApplicationSystemTestCase
           confidence: { score: 0.8, level: "high" },
           suggested_technologies: ["Ruby"],
           suggested_breakdown: [
-            { name: "Auth Module", days: 5, unit_price: 130 }
+            { name: "Auth Module", tasks: [{ name: "Setup Auth", hours: 40 }] }
           ]
         },
         references: []
