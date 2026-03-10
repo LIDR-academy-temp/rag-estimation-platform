@@ -116,4 +116,14 @@ class EstimationTest < ActiveSupport::TestCase
     results = Estimation.search_by_title("Completa")
     assert results.any?
   end
+
+  test "preferred_technologies merges frontend and backend stacks" do
+    estimation = estimations(:completed_estimation)
+    assert_equal ["React", "TypeScript", "Rails"], estimation.preferred_technologies
+  end
+
+  test "preferred_technologies returns empty array when no stacks set" do
+    estimation = estimations(:draft_estimation)
+    assert_equal [], estimation.preferred_technologies
+  end
 end

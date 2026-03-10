@@ -20,8 +20,19 @@ class EstimationJob < ApplicationJob
     end
 
     rag = RagServiceClient.new
+
+    frontend = Array(estimation.frontend_stack)
+    backend = Array(estimation.backend_stack)
+    context = if frontend.any? || backend.any?
+      {
+        frontend_stack: frontend.presence,
+        backend_stack: backend.presence
+      }.compact
+    end
+
     response = rag.estimate(
       query: query,
+      context: context,
       options: { currency: estimation.currency }
     )
     parsed = RagResponseParser.parse_estimate(response, estimation)

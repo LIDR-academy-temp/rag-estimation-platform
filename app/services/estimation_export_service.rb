@@ -10,13 +10,13 @@ class EstimationExportService
         project: build_project,
         dates: build_dates,
         currency: @estimation.currency,
-        discount: { type: nil, amount: nil },
-        objectives: [],
+        discount: nil,
+        objectives: nil,
         scope_blocks: build_scope_blocks,
-        roadmap_phases: [],
+        roadmap_phases: nil,
         items: build_items,
-        team_members: [],
-        conditions: { payment_terms: nil, included_services: nil, additional_services: [] },
+        team_members: nil,
+        conditions: nil,
         notes: nil,
         terms: nil
       },
@@ -39,7 +39,11 @@ class EstimationExportService
     {
       title: @estimation.title,
       subtitle: @estimation.description,
-      proposal_date: @estimation.created_at.strftime("%Y-%m-%d")
+      proposal_date: @estimation.created_at.strftime("%Y-%m-%d"),
+      preferred_stack: {
+        frontend: Array(@estimation.frontend_stack),
+        backend: Array(@estimation.backend_stack)
+      }
     }
   end
 
@@ -67,14 +71,14 @@ class EstimationExportService
     loaded_blocks.flat_map do |block|
       block.tasks.map do |task|
         {
-          type: "task",
+          type: "service",
           name: task.name,
           description: nil,
           quantity: task.hours_expected.to_f,
           unit: "hora",
           unit_price: task.effective_rate.to_f,
           discount_percent: 0,
-          phase: block.name
+          phase: nil
         }
       end
     end

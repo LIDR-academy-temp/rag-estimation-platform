@@ -38,6 +38,7 @@ class EstimationsController < ApplicationController
   def estimation_params
     params.require(:estimation).permit(
       :title, :description, :global_rate, :currency,
+      frontend_stack: [], backend_stack: [],
       functional_blocks_attributes: [
         :id, :name, :position, :_destroy,
         tasks_attributes: [:id, :name, :hours_optimistic, :hours_expected, :hours_pessimistic, :rate, :position, :_destroy]

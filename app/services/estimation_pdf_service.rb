@@ -17,6 +17,7 @@ class EstimationPdfService
 
     render_header(pdf)
     render_metadata(pdf)
+    render_preferred_stack(pdf)
     render_technologies(pdf)
     render_blocks(pdf)
     render_totals(pdf)
@@ -52,6 +53,19 @@ class EstimationPdfService
     pdf.text "Fecha: #{date}  |  Moneda: #{currency}  |  Tarifa base: #{rate} #{currency}/h  |  Confianza: #{confidence}",
       size: 9, color: GRAY_TEXT
     pdf.move_down 10
+  end
+
+  def render_preferred_stack(pdf)
+    frontend = Array(@estimation.frontend_stack)
+    backend = Array(@estimation.backend_stack)
+    return if frontend.empty? && backend.empty?
+
+    parts = []
+    parts << "Frontend: #{frontend.join(', ')}" if frontend.any?
+    parts << "Backend: #{backend.join(', ')}" if backend.any?
+
+    pdf.text "Stack preferido — #{parts.join(' | ')}", size: 9, color: GRAY_TEXT
+    pdf.move_down 4
   end
 
   def render_technologies(pdf)

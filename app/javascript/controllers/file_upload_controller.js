@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["dropzone", "textarea", "fileInput"]
+  static targets = ["dropzone", "textarea", "fileInput", "submitButton"]
 
   dragover(event) {
     event.preventDefault()
@@ -31,6 +31,15 @@ export default class extends Controller {
     if (!file) return
     this.readFile(file)
     this.fileInputTarget.value = ""
+  }
+
+  submit() {
+    this.submitButtonTarget.disabled = true
+    this.submitButtonTarget.classList.add("opacity-60", "cursor-not-allowed")
+    this.submitButtonTarget.innerHTML = `
+      <div class="h-4 w-4 mr-2 animate-spin rounded-full border-2 border-current border-t-transparent"></div>
+      Procesando...
+    `
   }
 
   readFile(file) {

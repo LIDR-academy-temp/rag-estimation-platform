@@ -128,7 +128,7 @@ class EstimatesController < ApplicationController
   def estimation_params
     params.require(:estimation).permit(
       :title, :description, :global_rate, :currency,
-      raw_transcriptions: [],
+      raw_transcriptions: [], frontend_stack: [], backend_stack: [],
       functional_blocks_attributes: [
         :id, :name, :position, :_destroy,
         tasks_attributes: [:id, :name, :hours_optimistic, :hours_expected, :hours_pessimistic, :rate, :position, :_destroy]
@@ -148,6 +148,7 @@ class EstimatesController < ApplicationController
   def estimation_edit_params
     params.require(:estimation).permit(
       :global_rate, :currency,
+      frontend_stack: [], backend_stack: [],
       functional_blocks_attributes: [
         :id,
         tasks_attributes: [:id, :hours_optimistic, :hours_expected, :hours_pessimistic, :rate]

@@ -2,7 +2,7 @@
 
 <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
   <%# Upload area %>
-  <%= form_with url: ingest_path, method: :post, data: { controller: "file-upload" }, class: "space-y-4" do %>
+  <%= form_with url: ingest_path, method: :post, data: { controller: "file-upload", action: "submit->file-upload#submit" }, class: "space-y-4" do %>
     <div data-file-upload-target="dropzone"
       data-action="dragover->file-upload#dragover dragleave->file-upload#dragleave drop->file-upload#drop click->file-upload#selectFile"
       class="rounded-xl border-2 border-dashed border-border bg-card p-8 text-center hover:border-primary/40 transition-colors cursor-pointer">
@@ -28,7 +28,7 @@
       class="flex min-h-[200px] w-full rounded-md border border-border bg-surface px-3 py-2 font-mono text-xs placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary resize-none"
     ></textarea>
 
-    <button type="submit" class="inline-flex items-center justify-center w-full rounded-md bg-primary text-primary-foreground text-sm font-medium h-10 px-4 hover:bg-primary/90 transition-colors">
+    <button type="submit" data-file-upload-target="submitButton" class="inline-flex items-center justify-center w-full rounded-md bg-primary text-primary-foreground text-sm font-medium h-10 px-4 hover:bg-primary/90 transition-colors">
       <%= icon("upload", classes: "mr-2 h-4 w-4") %>
       Ingestar presupuesto
     </button>

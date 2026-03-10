@@ -41,20 +41,17 @@ class EstimationExportServiceTest < ActiveSupport::TestCase
     assert_equal "EUR", @result[:quote][:currency]
   end
 
-  test "placeholder sections are empty" do
+  test "placeholder sections are nil" do
     quote = @result[:quote]
-    assert_equal [], quote[:objectives]
-    assert_equal [], quote[:roadmap_phases]
-    assert_equal [], quote[:team_members]
+    assert_nil quote[:objectives]
+    assert_nil quote[:roadmap_phases]
+    assert_nil quote[:team_members]
     assert_nil quote[:notes]
     assert_nil quote[:terms]
   end
 
-  test "conditions has empty structure" do
-    conditions = @result[:quote][:conditions]
-    assert_nil conditions[:payment_terms]
-    assert_nil conditions[:included_services]
-    assert_equal [], conditions[:additional_services]
+  test "conditions is nil" do
+    assert_nil @result[:quote][:conditions]
   end
 
   test "scope_blocks maps blocks without legacy fields" do
@@ -106,12 +103,12 @@ class EstimationExportServiceTest < ActiveSupport::TestCase
 
   test "item values for Login con JWT" do
     item = @result[:quote][:items].find { |i| i[:name] == "Login con JWT" }
-    assert_equal "task", item[:type]
+    assert_equal "service", item[:type]
     assert_equal 16.0, item[:quantity]
     assert_equal "hora", item[:unit]
     assert_equal 130.0, item[:unit_price]
     assert_equal 0, item[:discount_percent]
-    assert_equal "Autenticación", item[:phase]
+    assert_nil item[:phase]
   end
 
   test "effective_rate falls back to global_rate when task rate is nil" do
@@ -119,9 +116,9 @@ class EstimationExportServiceTest < ActiveSupport::TestCase
     assert_equal 120.0, item[:unit_price]
   end
 
-  test "item phase matches parent block name" do
+  test "item phase is nil" do
     item = @result[:quote][:items].find { |i| i[:name] == "Componentes UI" }
-    assert_equal "Frontend", item[:phase]
+    assert_nil item[:phase]
   end
 
   test "ingest compatibility: quote.project.title is present" do
@@ -132,6 +129,12 @@ class EstimationExportServiceTest < ActiveSupport::TestCase
     @result[:quote][:scope_blocks].each do |block|
       assert block[:technologies].is_a?(Array), "scope_block #{block[:title]} missing technologies"
     end
+  end
+
+  test "project includes preferred_stack with frontend and backend" do
+    stack = @result[:quote][:project][:preferred_stack]
+    assert_equal ["React", "TypeScript"], stack[:frontend]
+    assert_equal ["Rails"], stack[:backend]
   end
 
   test "ingest compatibility: scope_blocks have title and short_description" do

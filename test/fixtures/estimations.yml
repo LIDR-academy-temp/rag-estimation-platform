@@ -14,6 +14,8 @@ completed_estimation:
   confidence_score: 0.85
   confidence_level: high
   technologies: <%= ["Ruby", "Rails"].to_json %>
+  frontend_stack: <%= ["React", "TypeScript"].to_json %>
+  backend_stack: <%= ["Rails"].to_json %>
   total_hours_optimistic: 100.00
   total_hours_expected: 150.00
   total_hours_pessimistic: 200.00

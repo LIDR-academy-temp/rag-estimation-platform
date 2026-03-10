@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_02_27_133416) do
+ActiveRecord::Schema[8.0].define(version: 2026_03_10_094210) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -67,6 +67,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_02_27_133416) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.text "error_message"
+    t.jsonb "frontend_stack", default: []
+    t.jsonb "backend_stack", default: []
     t.index ["created_at"], name: "index_estimations_on_created_at"
     t.index ["status"], name: "index_estimations_on_status"
     t.index ["user_id"], name: "index_estimations_on_user_id"

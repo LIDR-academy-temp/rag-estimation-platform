@@ -1,4 +1,7 @@
 class Estimation < ApplicationRecord
+  FRONTEND_OPTIONS = %w[React Vue.js Angular Next.js Svelte TypeScript].freeze
+  BACKEND_OPTIONS = %w[Rails Django FastAPI Node.js SpringBoot Laravel Go].freeze
+
   belongs_to :user
   has_many :functional_blocks, -> { order(:position) }, dependent: :destroy
   has_many :tasks, through: :functional_blocks
@@ -14,4 +17,8 @@ class Estimation < ApplicationRecord
 
   scope :recent, -> { order(created_at: :desc) }
   scope :search_by_title, ->(q) { where("title ILIKE ?", "%#{q}%") if q.present? }
+
+  def preferred_technologies
+    Array(frontend_stack) + Array(backend_stack)
+  end
 end
